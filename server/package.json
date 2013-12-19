@@ -1,0 +1,27 @@
+{
+  "name": "opendata-heatmap",
+  "description": "Serveur DataHeatMap",
+  "homepage": "http://www.opendata-heatmap.com",
+  "version": "0.0.2",
+  "private": true,
+  "main": "server.js",
+  "author": {
+    "name": "Patrice Delorme",
+    "email": "patrice.delorme@gmail.com",
+    "url": "http://www.opendata-heatmap.com"
+  },
+  "dependencies": {
+    "express": "3.2.4",
+    "nano": "*",
+    "gm": "*",
+    "http-proxy": "*",
+    "jade": "*",
+    "mysql": "*",
+    "xml2js": "*"
+  },
+  "devDependencies": {},
+  "repository": "",
+  "keywords": [
+    "vuparvous"
+  ]
+}

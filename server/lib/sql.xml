@@ -1,0 +1,93 @@
+<queries>
+	<insert_dataset>
+		INSERT dataset 
+			(name) 
+		VALUES
+			(':name') 
+		ON DUPLICATE KEY UPDATE 
+			name=':name', 
+			creation_date = now();
+	</insert_dataset>
+	<insert_geodata>
+	    INSERT INTO geodata
+	    	(latitude, longitude, dataset_id, creation_date) 
+	    VALUES
+	    	(:latitude, :longitude, :dataset_id, now());
+	</insert_geodata>
+	
+	<!-- retourne la liste des points dans la zone west/east/north/south -->
+	<get_area_geodata>
+	    <![CDATA[
+	    select geodata.longitude, geodata.latitude
+	      from geodata
+	       where geodata.longitude > :west
+	        and geodata.longitude < :east
+	        and geodata.latitude < :north
+	        and geodata.latitude > :south
+	    ]]>
+	</get_area_geodata>
+	<!--  retourne la liste des dataset proche de lat/lon-->
+	<get_geo_datasets>
+	    <![CDATA[
+	    SELECT DISTINCT dataset.id, dataset.name 
+	      FROM geodata, 
+	           dataset
+	     WHERE geodata.dataset_id = dataset.id
+	       AND abs(geodata.longitude - :longitude) < :radius
+	       AND abs(geodata.latitude - :latitude) < :radius
+	     ORDER BY abs(geodata.longitude - :longitude) + abs(geodata.longitude - :latitude) asc
+	     ]]>
+	</get_geo_datasets>
+	
+	<!-- retourne la liste des dataset dont le nom cotien name -->
+	<get_ajax_dataset>
+	    SELECT DISTINCT dataset.id, dataset.name 
+	      FROM dataset
+	     WHERE name LIKE '%:name%'
+	     ORDER BY name
+	</get_ajax_dataset>
+	
+	<!-- user buisness -->
+	<select_user>
+		select users.*
+		  from vuparvous.users
+		 where users.login = ':login'
+	</select_user>
+	<update_user>
+		UPDATE vuparvous.users
+		   SET password   = coalesce(':password'  , password ),
+		       email      = coalesce(':email'     , email ),
+		       first_name = coalesce(':first_name', first_name ),
+		       last_name  = coalesce(':first_name', last_name )
+		 WHERE login = ':login'
+	</update_user>
+	<insert_user>
+		INSERT INTO vuparvous.users set ?
+	</insert_user>
+
+	
+	<update_user_vote>
+		INSERT vuparvous.votes 
+			(user_login, photo_id, vote_insolite, vote_qualite, vote_date) 
+		VALUES
+			(':login',':photo_id', :vote_insolite, :vote_qualite, now()) 
+		ON DUPLICATE KEY UPDATE 
+			vote_insolite=:vote_insolite, 
+			vote_qualite=:vote_qualite,
+			vote_date = now();
+	</update_user_vote>
+	<update_user_visit>
+		INSERT vuparvous.visits 
+			(user_login, site_id, visit_date) 
+		VALUES
+			(':login',':site_id', now()) 
+		ON DUPLICATE KEY UPDATE 
+			visit_date = now();
+	</update_user_visit>
+	<insert_photo>
+		INSERT INTO vuparvous.photos 
+			(auteur, site_id, filename, score_insolite, score_qualite, commentaire)
+		VALUES
+		    (':auteur',':site_id',':filename',0,0,':commentaire')
+	</insert_photo>
+</queries>

@@ -1,0 +1,224 @@
+﻿<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <style>
+            body {
+                padding-top: 60px;
+                padding-bottom: 40px;
+            }
+        </style>
+        <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
+        <link rel="stylesheet" href="css/bootstrap-fileupload.min.css">
+        <link rel="stylesheet" href="css/main.css">
+
+        <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+		<script type="text/javascript" src="http://maps.google.com/maps/api/js?key=AIzaSyC9DZtIk_eLUPRCJxg19XP2ZdHiRYwhpTI&sensor=false"></script>
+		<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=visualization"></script>
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+        <!-- This code is taken from http://twitter.github.com/bootstrap/examples/hero.html -->
+
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a class="brand" href="#">OpenData HeatMap</a>
+                    <div class="nav-collapse collapse">
+                        <ul class="nav">
+                            <!-- <li class="active"><a href="#carte">Carte</a></li> -->
+							<li><a href="#about">A Propos</a></li>
+							<li><a href="#contribute">Contribuer</a></li>
+							<li><a href="#contact">Contact</a></li>
+						<!--
+                            
+                            
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#">Action</a></li>
+                                    <li><a href="#">Another action</a></li>
+                                    <li><a href="#">Something else here</a></li>
+                                    <li class="divider"></li>
+                                    <li class="nav-header">Nav header</li>
+                                    <li><a href="#">Separated link</a></li>
+                                    <li><a href="#">One more separated link</a></li>
+                                </ul>
+                            </li> -->
+                        </ul>
+                        <form class="navbar-form pull-right">
+                            <input class="span2" type="text" placeholder="Email">
+                            <input class="span2" type="password" placeholder="Password">
+                            <button type="submit" class="btn">Sign in</button>
+                        </form>
+                    </div><!--/.nav-collapse -->
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+
+            <!-- Main hero unit for a primary marketing message or call to action -->
+            <!-- 
+			<div class="hero-unit">
+				<h2>OpenData HeatMap</h2>
+                <p>Carte de visulaisation la densité de données géolocalisées ouvertes. <br>
+				   C'est un outil de comparaison et de suivi de l'ouverture des données.<p>
+                <p><a href="#about" class="btn btn-primary btn-large">Plus d'info &raquo;</a></p>
+            </div>
+			--> 
+
+            <div id="carte" class="row">
+                <div class="span8">
+					<h2>OpenData HeatMap 2010</h2>
+					<p class="text-info">
+						  Carte de densité des jeux de données ouvertes référencées en 2010
+					</p>
+                    <div id="heatmapArea" class="well" style="padding:0;height:400px;cursor:pointer;position:relative;">
+					</div>
+					<p>Cliquez sur la carte pour découvrir les jeux de données ouvertes disponibles localement</p>
+                </div>
+                <div class="span4">
+                    <h2>Jeux de données</h2>
+					<p class="text-info">
+						  Liste des jeux de données cliqués sur la carte
+					</p>
+                    <table class="table table-striped table-bordered table-hover table-condensed">
+						<thead>
+							<tr><th>Données</th></tr>
+						</thead>
+						<tbody id="datasets">
+							<tr><td>Monuments-&-sites-culturels.csv</td></tr>
+							<tr><td>Parcs-et-jardins.csv</td></tr>
+							<tr><td>Plages.csv</td></tr>
+							<tr><td>Sites-naturels-incontournables.csv</td></tr>
+						</tr>
+						</tbody>
+					</table>
+                    <p><a class="btn" href="#">Plus &raquo;</a></p>
+                </div>
+            </div>
+
+			<div id="about" class="row">
+				<div class="span9">
+					<h2>A Propos</h2>
+					<p>L'OpenData Heat Map à été imaginée dans le cardre du concours OpenDataPaca.<br/>
+					   Il à pour objectif de permettre aux acteurs de l'OpenData (Organisme publics, fournisseurs de donnée, élus, citoyens) de suivre l'évolution de l'ouverture des données.</p>
+					<p>L'OpenData Heatmap représente uniquement la densité des données ouvertes géolocalisées sans ce soucier sur les données en elle même. <br>
+					   L'unique critère de prise en compte est la nature ouverte et géolocalisée des données<br>
+					   C'est cette ignorance des données permet d'établir simplement une carte d'efficacité de l'ouverture des données.<br>
+					<p>L'OpenData heatMap est également un index géographiques des données ouvertes géolocalisée.<br>
+					   Il permet l'identificatrion rapide de jeux de données basée sur le lieux d'intérets</p>
+				</div>
+			</div>
+            <hr>
+
+            <div id="contribute" class="row">
+            	<div class="span9">
+					<h2>Contribuer</h2>
+					<p>L'OpenData HeatMap se contruit et évolue en fonction des jeux de données qui y sont ajoutées<br/>
+					   Vous pouvez contribuer à l'OpenData HeatMap en y ajoutant vos propres jeux de données grace au formulaire ci-dessous.<p>
+					<p>Pour etre éligible les données contribuées doivent respecter les critères suivants :<p>
+					<ul>
+						<li>Données Ouvertes exclusivement</li>
+						<li>Vérifiez que le jeu de données n'est pas déja disponible dans la carte </li>
+					</ul>
+					<form class="form-horizontal">
+					  <fieldset>
+					    <legend>Formulaire de contibution de jeux de donnée</legend>
+					    <div class="alert">
+						  <button type="button" class="close" data-dismiss="alert">&times;</button>
+						  <strong>Attention!</strong> Vos données sont érronées.
+						</div>
+					    <div class="control-group">
+					    	<label class="control-label" for="dataset_name" data-provide="dataset_names">Nom du jeu de donnée</label>
+						    <div class="controls">
+						    	<input type="text" id="dataset_name" placeholder="Nom des données…">
+						    	<span class="help-block">Choisisez un nom représentatif</span>
+						    </div>
+						</div>
+						<div class="control-group">
+					    	<label class="control-label" for="dataset_owner">Propriétaire des données</label>
+						    <div class="controls">
+						    	<input type="text" id="dataset_owner" placeholder="Propriétaire…">
+						    	<span class="help-block">Le nom de l'institution ou de l'organisation propriétaire</span>
+						    </div>
+						</div>
+						<div class="control-group">
+					    	<label class="control-label" for="dataset_file">Le fichier de données</label>
+						    <div class="controls">
+						    	<div class="fileupload fileupload-new" data-provides="fileupload">
+								  <div class="input-append">
+								    <div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i> <span class="fileupload-preview"></span></div><span class="btn btn-file"><span class="fileupload-new">Select file</span><span class="fileupload-exists">Change</span><input type="file" id="dataset_file"/></span><a href="#" class="btn fileupload-exists" data-dismiss="fileupload">Remove</a>
+								  </div>
+								</div>
+						    	<span class="help-block">Le fichier doit etre au format csv et posséder les colonnes <strong>longitude</strong> et <strong>latitude</strong></span>
+						    </div>
+						</div>
+						
+						
+					   	<div class="control-group">
+	    					<div class="controls">
+					    		<button type="submit" class="btn btn-primary">Submit</button>
+					    	</div>
+					    </div>
+					  </fieldset>
+					</form>
+				</div>
+			</div>
+			
+			
+			<div id="contact"class="row">
+            	<div class="span3">
+					<h2>Contacts</h2>
+					<p>Patrice Delorme<br/>
+					   @pdelorme<br/>
+					   patrice.delorme@gmail.com
+					</p>
+				</div>
+			</div>
+            <footer>
+                <p>&copy; Patrice Delorme 2013</p>
+            </footer>
+
+        </div> <!-- /container -->
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+
+        <script src="js/vendor/bootstrap.min.js"></script>
+        <script src="js/vendor/bootstrap-fileupload.min.js"></script>
+
+    	<script type="text/javascript" src="js/vendor/heatmap.js"></script>
+    	<script type="text/javascript" src="js/vendor/heatmap-gmaps.js"></script>
+
+    	<script type="text/javascript" src="js/vendor/underscore-1.4.4.min.js"></script>
+    	<script type="text/javascript" src="js/vendor/backbone-1.0.0.min.js"></script>
+        <script src="js/testdata-2010.js"></script>
+        <script src="js/main.js"></script>
+
+	
+<!--        <script>
+            var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+            (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+            g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+            s.parentNode.insertBefore(g,s)}(document,'script'));
+        </script> -->
+    </body>
+</html>
