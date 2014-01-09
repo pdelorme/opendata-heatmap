@@ -3,5 +3,5 @@ var config      = require('./config'),
 
 api.init(function(){
 	console.log('starting');
-	api.parse_directory(__dirname+'\\data\\',true);
+	api.parse_directory(__dirname+'/data/',true);
 });

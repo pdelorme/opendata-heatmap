@@ -17,7 +17,8 @@
     "http-proxy": "*",
     "jade": "*",
     "mysql": "*",
-    "xml2js": "*"
+    "xml2js": "*",
+    "csv":"*"
   },
   "devDependencies": {},
   "repository": "",

@@ -19,7 +19,7 @@ db.init_db(config.db_host,
 );
 
 // loads queries.
-db.loadXMLQueries(__dirname + '\\sql.xml', function(){
+db.loadXMLQueries(__dirname + '/sql.xml', function(){
 	console.log("file LOADED");
 });
 
