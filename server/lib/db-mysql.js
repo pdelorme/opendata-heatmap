@@ -1,6 +1,7 @@
 var mysql = require('mysql');
 var fs    = require('fs');
 var xml2js = require('xml2js');
+var debug = false;
 
 module.exports = {
   init_db : function(host, database, user, password){
@@ -108,7 +109,7 @@ function update_or_insert(updateQuery, insertQuery, object, callback){
 			if (err) throw err;
 			if(result.affectedRows>0){
 				console.log("object updated :", object);
-				connection.end();
+				connection.release();
 				if(callback) 
 					callback();
 				return;
@@ -119,7 +120,7 @@ function update_or_insert(updateQuery, insertQuery, object, callback){
 				if (err) throw err;
 				console.log("object inserted :",object);
 				// And done with the connection.
-				connection.end();
+				connection.release();
 				if(callback)
 					callback();
 			});
@@ -161,14 +162,15 @@ function list(queryKey, params, callback, options) {
 		return;
 	}
 	queryString = prepare(queryString,params);
-	console.log('queryString : ',queryString);
+	if(debug)
+		console.log('queryString : ',queryString);
 	if(!options)
 		options={};
 	options.sql = queryString;
 	pool.getConnection(function(err, connection) {
 		connection.query( options, function(err, rows) {
 		    // And done with the connection.
-		    connection.end();
+		    connection.release();
 		    if(callback)
 		    	callback(err,rows);
 		    // Don't use the connection here, it has been returned to the pool.
@@ -212,19 +214,27 @@ function insert(insertKey, object, callback){
 	}
 	pool.getConnection(function(err, connection) {
 		// Use the connections
-		console.log(insertString,object);
-		connection.query(insertString, object, function(err, result) {
-			if (err) throw err;
-			//console.log("object inserted :",object);
-			connection.end();
+		insertString = prepare(insertString,object);
+		if(debug)
+			console.log(insertString);
+		try {
+			connection.query(insertString, function(err, result) {
+				if (err) throw err;
+				//console.log("object inserted :",object);
+				connection.release();
+				if(callback)
+					callback(err, result);
+			});
+		} catch(error){
+			console.log("FATAL ERROR :",error);
 			if(callback)
-				callback(err, result);
-		});
+				callback(error);
+		}
 	});
 }
 
 /**
- * insert un tableau d'objet dans une même transaction.
+ * insert un tableau d'objet dans une mï¿½me transaction.
  * @param insertKey
  * @param objectArray
  * @param callback
@@ -243,7 +253,8 @@ function batchInsert(insertKey, objectArray, callback){
 		var objectsToInsert = objectArray.length;
 		for(var i=0; i<objectsToInsert; i++){
 			var object = objectArray[i];
-			console.log(insertString,object);
+			if(debug)
+				console.log(insertString,object);
 			// Use the connections
 			connection.query(insertString, object, function(err, result) {
 				if (err) {
@@ -252,8 +263,9 @@ function batchInsert(insertKey, objectArray, callback){
 				}
 				insertedObjects++;
 				if(objectsToInsert == insertedObjects){
-					console.log("last object inserted. calling back");
-					connection.end();
+					if(debug)
+						console.log("last object inserted. calling back");
+					connection.release();
 					if(callback)
 						callback();
 				}
@@ -263,7 +275,7 @@ function batchInsert(insertKey, objectArray, callback){
 }
 
 /**
- * insert un tableau d'objet dans une même transaction.
+ * insert un tableau d'objet dans une mï¿½me transaction.
  * @param insertKey
  * @param objectArray
  * @param callback
@@ -283,7 +295,8 @@ function batchUpdate(updateKey, objectArray, callback){
 		for(var i=0; i<objectsToInsert; i++){
 			var object = objectArray[i];
 			updateString = prepare(updateString,object);
-			console.log(updateString);
+			if(debug)
+				console.log(updateString);
 			// Use the connections
 			connection.query(updateString, function(err, result) {
 				if (err) {
@@ -292,8 +305,9 @@ function batchUpdate(updateKey, objectArray, callback){
 				}
 				insertedObjects++;
 				if(objectsToInsert == insertedObjects){
-					console.log("last object inserted. calling back");
-					connection.end();
+					if(debug)
+						console.log("last object inserted. calling back");
+					connection.release();
 					if(callback)
 						callback();
 				}
@@ -318,13 +332,14 @@ function update(updateKey, params, callback){
 		return;
 	}
 	updateString = prepare(updateString,params);
-	console.log(updateString);
+	if(debug)
+		console.log(updateString);
 	pool.getConnection(function(err, connection) {
 		// Use the connections
 		connection.query(updateString, function(err, result) {
 			if (err) throw err;
 			//console.log("object inserted :",object);
-			connection.end();
+			connection.release();
 			if(callback)
 				callback(err, result);
 		});

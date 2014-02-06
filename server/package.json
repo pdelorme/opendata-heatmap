@@ -18,7 +18,10 @@
     "jade": "*",
     "mysql": "*",
     "xml2js": "*",
-    "csv":"*"
+    "request":"*",
+    "batch":"*",
+    "string":"*",
+    "line-by-line":"*"
   },
   "devDependencies": {},
   "repository": "",

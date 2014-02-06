@@ -60,11 +60,12 @@ app.get('/api/geo-datasets',	api.get_geo_datasets);
 app.get('/api/ajax-dataset',	api.get_ajax_dataset);
 app.get('/api/area-geodata',	api.get_area_geodata);
 app.post('/api/upload-dataset',	api.upload_dataset);
-app.get('/api/register_user',        api.register_user);
-app.get('/api/login',                api.login);
-app.get('/api/logout',               api.logout);
-app.get('/api/user_info/:login',     api.get_user_info);
-app.get('/api/user_info',            api.get_user_info);
+//app.get('/api/register_user',        api.register_user);
+//app.get('/api/login',                api.login);
+//app.get('/api/logout',               api.logout);
+//app.get('/api/user_info/:login',     api.get_user_info);
+//app.get('/api/user_info',            api.get_user_info);
+app.get('/api/test',                 api.test);
 
 
 // server startup.

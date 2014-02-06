@@ -7,10 +7,16 @@ DROP TABLE geodata;
 
 CREATE TABLE IF NOT EXISTS `dataset` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(128) NOT NULL,
+  `filepath` varchar(128) NOT NULL,
+  `type` varchar(32) NOT NULL,
+  `dataset_ref` varchar(32) NOT NULL,
+  `title` varchar(256) NOT NULL,
+  `revision` varchar(32) NOT NULL,
+  `data_url` varchar(256) NOT NULL,
+  `user_url` varchar(256) NOT NULL,
   `creation_date` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='descriptif du jeu de données' AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='descriptif du jeu de donnï¿½es' AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
