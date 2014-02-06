@@ -10,9 +10,9 @@ var config_prod = {
 var config_dev = {
 	server_port:3000,
 	db_host:"localhost",
-	db_database:"heatmap",
+	db_database:"odhm",
 	db_user:"root",
-	db_password:"",
+	db_password:"D3leurence",
 	web_root:__dirname+"/../web/"
 	
 };

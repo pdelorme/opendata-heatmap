@@ -1,12 +1,9 @@
 <queries>
 	<insert_dataset>
 		INSERT dataset 
-			(name) 
+			(filepath, type, dataset_ref, title, revision, data_url, user_url, creation_date) 
 		VALUES
-			(':name') 
-		ON DUPLICATE KEY UPDATE 
-			name=':name', 
-			creation_date = now();
+			(':filepath', ':type', ':dataset_ref', ':title', ':revision', ':data_url', ':user_url', now())
 	</insert_dataset>
 	<insert_geodata>
 	    INSERT INTO geodata

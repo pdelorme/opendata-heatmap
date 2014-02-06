@@ -17,7 +17,11 @@
     "http-proxy": "*",
     "jade": "*",
     "mysql": "*",
-    "xml2js": "*"
+    "xml2js": "*",
+    "request":"*",
+    "batch":"*",
+    "string":"*",
+    "line-by-line":"*"
   },
   "devDependencies": {},
   "repository": "",
