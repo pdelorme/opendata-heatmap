@@ -5,6 +5,12 @@
 		VALUES
 			(':filepath', ':type', ':dataset_ref', ':title', ':revision', ':data_url', ':user_url', now())
 	</insert_dataset>
+	<selectDataset>
+	   SELECT * 
+	     FROM dataset
+	    WHERE dataset_ref = ':dataset_ref'
+	      AND revision = ':revision'
+	</selectDataset>
 	<insert_geodata>
 	    INSERT INTO geodata
 	    	(latitude, longitude, dataset_id, creation_date) 
@@ -15,24 +21,38 @@
 	<!-- retourne la liste des points dans la zone west/east/north/south -->
 	<get_area_geodata>
 	    <![CDATA[
-	    select geodata.longitude, geodata.latitude
+	    select geodata.latitude lat, geodata.longitude lng, count(*) nb
 	      from geodata
 	       where geodata.longitude > :west
 	        and geodata.longitude < :east
 	        and geodata.latitude < :north
 	        and geodata.latitude > :south
+	     group by round(geodata.longitude*:tile), round(geodata.latitude*:tile)
 	    ]]>
 	</get_area_geodata>
+  <!-- retourne la liste des points groupé par maille de 1/:tile -->
+  <get_geodata>
+      <![CDATA[
+      select round(geodata.latitude*:tile)/:tile lat, round(geodata.longitude*:tile)/:tile lng, count(*) nb
+        from geodata
+      group by round(geodata.longitude*:tile), round(geodata.latitude*:tile)
+      ]]>
+  </get_geodata>
 	<!--  retourne la liste des dataset proche de lat/lon-->
 	<get_geo_datasets>
 	    <![CDATA[
-	    SELECT DISTINCT dataset.id, dataset.name 
-	      FROM geodata, 
-	           dataset
-	     WHERE geodata.dataset_id = dataset.id
-	       AND abs(geodata.longitude - :longitude) < :radius
-	       AND abs(geodata.latitude - :latitude) < :radius
-	     ORDER BY abs(geodata.longitude - :longitude) + abs(geodata.longitude - :latitude) asc
+	    SELECT id, title, avg(lat) lat, avg(lng) lng
+	      FROM (
+			    SELECT dataset.id, dataset.title, geodata.latitude lat, geodata.longitude lng
+			      FROM geodata, 
+			           dataset
+			     WHERE geodata.dataset_id = dataset.id
+			       AND abs(geodata.longitude - :longitude) < :radius
+			       AND abs(geodata.latitude - :latitude) < :radius
+			     ORDER BY abs(geodata.longitude - :longitude) + abs(geodata.latitude - :latitude) asc
+		     ) A
+		   GROUP BY id, title
+	     LIMIT :limit
 	     ]]>
 	</get_geo_datasets>
 	

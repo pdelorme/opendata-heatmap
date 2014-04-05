@@ -1,0 +1,22 @@
+{
+  "name": "db-mysql",
+  "description": "Mysql utility",
+  "homepage": "http://opendataheatmap.patricedelorme.com",
+  "version": "0.0.2",
+  "private": true,
+  "author": {
+    "name": "Patrice Delorme",
+    "email": "patrice.delorme@gmail.com",
+    "url": "http://opendataheatmap.patricedelorme.com"
+  },
+  "main": "./db-mysql",
+  "dependencies": {
+    "mysql": "*",
+    "xml2js": "*"
+  },
+  "devDependencies": {},
+  "repository": "",
+  "keywords": [
+    "tools","db","mysql"
+  ]
+}

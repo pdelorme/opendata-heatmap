@@ -4,7 +4,7 @@ $(function(){
     var myLatlng = new google.maps.LatLng(43.293466, 5.364575);
 
     var myOptions = {
-      zoom: 8,
+      zoom: 4,
       center: myLatlng,
       mapTypeId: google.maps.MapTypeId.ROADMAP,
       disableDefaultUI: false,
@@ -18,47 +18,43 @@ $(function(){
     var map = new google.maps.Map($("#heatmapArea")[0], myOptions);
     
     heatmap = new HeatmapOverlay(map, {
-        "radius":20,
+        "radius":5,
         "visible":true, 
         "opacity":60
     });
-  
-    
-
-    
-    
+    geoData = new Array();
+    once=false;
     // this is important, because if you set the data set too early, the latlng/pixel projection doesn't work
-    google.maps.event.addListenerOnce(map, "idle", function(){
+    google.maps.event.addListenerOnce(map, 'idle', function(){
     	updateMap(map);
+        // heatmap.setDataSet({max: 2, data: geoData});
     });
     google.maps.event.addListener(map, 'click', function(e) {
     	listFiles(e.latLng, map);
     });
     google.maps.event.addListener(map, 'bounds_changed', function(e) {
-        // updateMap(map);
+        //updateMap(map);
+      // heatmap.setDataSet({max: 2, data: geoData});
     });
 });
         
 function updateMap(map){
 	var bound = map.getBounds();
 	var queryObject = {
-			north: bound.getNorthEast().lat(),
-			south: bound.getSouthWest().lat(),
-			east : bound.getNorthEast().lng(),
-			west : bound.getSouthWest().lng(),
 	};
-	$.getJSON('/api/area-geodata', queryObject, function(data) {
-		var geoData = new Array();
-		var googleLatLng = new Array(); 
+	$.getJSON('/api/geodata', queryObject, function(data) {
+		// var geoData = new Array();
+		//var googleLatLng = new Array(); 
 		$.each(data, function(key, val) {
-			geoData.push({lng:val.longitude, lat:val.latitude, count:1});
-			googleLatLng.push(latLng = new google.maps.LatLng(val.latitude, val.longitude));
+			geoData.push({lng:val.longitude, lat:val.latitude, count:val.count});
+			//googleLatLng.push(latLng = new google.maps.LatLng(val.latitude, val.longitude));
 		});
 		console.log("nb points:",geoData.length);
 		// ajax implementation
 		
-		// heatmap.setDataSet({max: 2, data: geoData});
-		heatmap.setDataSet(testData);
+		//heatmap.setDataSet({max: 2, data: geoData});
+		heatmap.setDataSet({max: 10, data: geoData});
+		// heatmap.setDataSet(testData);
 
 		// google implementation
 		//		var gHeatmap = new google.maps.visualization.HeatmapLayer({

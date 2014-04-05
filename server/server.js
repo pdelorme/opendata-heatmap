@@ -59,6 +59,7 @@ app.get('/*',function(req,res,next){
 app.get('/api/geo-datasets',	api.get_geo_datasets);
 app.get('/api/ajax-dataset',	api.get_ajax_dataset);
 app.get('/api/area-geodata',	api.get_area_geodata);
+app.get('/api/geodata',         api.get_geodata);
 app.post('/api/upload-dataset',	api.upload_dataset);
 //app.get('/api/register_user',        api.register_user);
 //app.get('/api/login',                api.login);
