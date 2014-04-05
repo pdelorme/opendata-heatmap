@@ -48,8 +48,7 @@ exports.get_area_geodata = function(req,res){
 	};
 	
 	db.list('get_area_geodata',queryObject, function(err, data){
-	  console.log(data.length);
-		return res.send(data);
+	  return res.send(data);
 	});
 };
 
