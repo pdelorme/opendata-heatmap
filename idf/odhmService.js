@@ -7,6 +7,12 @@ module.exports = {
     init : function(config, callback){
       init(config, callback);
     },
+    createDataset : function(datasetInfo, callback){
+      createDataset(datasetInfo, callback);
+    },
+    insertGeodata : function(dataset_id, geoObject, callback){
+      insertGeodata(dataset_id, geoObject, callback);
+    },
     insertDataset : function(datasetInfo, geoObjects, callback){
       insertDataset(datasetInfo, geoObjects, callback);
     },
@@ -33,6 +39,29 @@ function init(config, callback){
     console.log("file LOADED");
     callback();
   });
+}
+
+/**
+ * create dataset if not exists.
+ * @param datasetInfo
+ * @param callback
+ * @returns
+ */
+function createDataset(datasetInfo, callback){
+  db.list('select_dataset', datasetInfo, function(err, data){
+    if(data && data.length>0){
+      return callback (null, data[0].id);
+    }
+    db.insert('insert_dataset', datasetInfo, function(err,data){
+      var datasetId = data.insertId;
+      return callback(null,datasetId);
+    });
+  });
+}
+
+function insertGeodata(dataset_id, geoObject, callback) {
+  geoObject.dataset_id = dataset_id;
+  db.insert('insert_geodata', geoObject, callback);
 }
 
 /**
@@ -69,5 +98,5 @@ function getDataset(dataset_ref, revision, callback){
       dataset_ref : dataset_ref,
       revision : revision
   };
-  db.list("selectDataset",queryObject, callback);
+  db.list("select_dataset",queryObject, callback);
 }

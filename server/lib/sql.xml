@@ -5,12 +5,12 @@
 		VALUES
 			(':filepath', ':type', ':dataset_ref', ':title', ':revision', ':data_url', ':user_url', now())
 	</insert_dataset>
-	<selectDataset>
+	<select_dataset>
 	   SELECT * 
 	     FROM dataset
 	    WHERE dataset_ref = ':dataset_ref'
 	      AND revision = ':revision'
-	</selectDataset>
+	</select_dataset>
 	<insert_geodata>
 	    INSERT INTO geodata
 	    	(latitude, longitude, dataset_id, creation_date) 

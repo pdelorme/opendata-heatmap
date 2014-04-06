@@ -12,35 +12,32 @@ var csvOptions = {
 };
 
 module.exports = {
-    extractCsvGeoObjects : function(filename, callback){
-      extractCsvGeoObjects(filename, callback);
+    extractCsvGeoObjects : function(filename, processGeoObject, callback){
+      extractCsvGeoObjects(filename, processGeoObject, callback);
     }
 };
 
 /**
  * extract geoCoordinates from csv files
  * @param filename
- * @param callback(err, geoObjects) 
+ * @param processGeoObject un geoObject to process.
+ * @param callback(err) 
  */
-function extractCsvGeoObjects(filename, callback){
+function extractCsvGeoObjects(filename, processGeoObject, callback){
   // console.log("processing "+filename);
-  var geoObjects = Array();
   csv()
   .from.path(filename,csvOptions)
-  .on('end', function() {
-      // 2 no data found : exit
-      if(geoObjects.length==0) {
-        console.log(filename +":no data");
-        return callback();
-      }
-          
-      console.log(filename +":"+geoObjects.length);
-      return callback(null, geoObjects);
+  .on('end', function() {          
+      // console.log(filename +":"+geoObjects.length);
+    if(callback)
+      callback();
+    return;
   })
   .transform(function(row, index) {
-    dataObject = parseRow(row);
-    if(dataObject)
-      geoObjects.push(dataObject);
+    geoObject = parseRow(row);
+    if(geoObject){
+      processGeoObject(geoObject);
+    }
   });
 }
 /**

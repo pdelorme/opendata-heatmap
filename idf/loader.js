@@ -16,12 +16,18 @@ function main(){
   function _fileProcessor(datasetInfo, done){ 
     console.log("processing dataset file :",datasetInfo.dataset_ref);
     // 1/ extract geoObjects from files
-    csvTools.extractCsvGeoObjects(datasetInfo.filepath,
-        function(err,geoObjects){
-          // 2/ insert geoObjets
-          odhm.insertDataset(datasetInfo, geoObjects, done);
-        }
-    );
+    odhm.createDataset(datasetInfo, function(err, dataset_id){
+      csvTools.extractCsvGeoObjects(datasetInfo.filepath,
+          function(geoObject){
+            odhm.insertGeodata(dataset_id, geoObject, null);
+          },
+          function(err,geoObjects){
+            // 2/ insert geoObjets
+            odhm.insertDataset(datasetInfo, geoObjects, done);
+          }
+      );
+    })
+
   }
   
   /**
