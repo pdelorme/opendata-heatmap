@@ -41,18 +41,18 @@
 	<!--  retourne la liste des dataset proche de lat/lon-->
 	<get_geo_datasets>
 	    <![CDATA[
-	    SELECT id, title, avg(lat) lat, avg(lng) lng
-	      FROM (
-			    SELECT dataset.id, dataset.title, geodata.latitude lat, geodata.longitude lng
-			      FROM geodata, 
-			           dataset
-			     WHERE geodata.dataset_id = dataset.id
-			       AND abs(geodata.longitude - :longitude) < :radius
-			       AND abs(geodata.latitude - :latitude) < :radius
-			     ORDER BY abs(geodata.longitude - :longitude) + abs(geodata.latitude - :latitude) asc
-		     ) A
-		   GROUP BY id, title
-	     LIMIT :limit
+            SELECT id, title, avg(lat) lat, avg(lng) lng, data_url, user_url
+              FROM (
+                            SELECT dataset.id, dataset.title, dataset.data_url, dataset.user_url, geodata.latitude lat, geodata.longitude lng
+                              FROM geodata, 
+                                   dataset
+                             WHERE geodata.dataset_id = dataset.id
+                               AND abs(geodata.longitude - :longitude) < :radius
+                               AND abs(geodata.latitude - :latitude) < :radius
+                             ORDER BY abs(geodata.longitude - :longitude) + abs(geodata.latitude - :latitude) asc
+                     ) A
+                   GROUP BY id, title, data_url, user_url
+             LIMIT :limit
 	     ]]>
 	</get_geo_datasets>
 	

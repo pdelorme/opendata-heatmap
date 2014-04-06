@@ -136,7 +136,7 @@ function listFiles(position, map) {
 			} else {
 			  dist+=new Number(val.d).toFixed(1)+"&nbsp;Km";
 			}
-			$("#datasets").append("<tr><td>"+dist+"</td><td>"+unescape(val.title)+"</td><td><a class='btn btn-default' href='"+val.user_url+"'><span class='glyphicon glyphicon-star'>csv</span></a></td></tr>");
+			$("#datasets").append("<tr><td>"+dist+"</td><td>"+unescape(val.title)+"</td><td><a class='btn btn-default' href='"+unescape(val.data_url)+"'><span class='glyphicon glyphicon-star'>csv</span></a></td></tr>");
 		});
 	});
 }
