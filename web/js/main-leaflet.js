@@ -8,11 +8,16 @@ var marker;
 
 function initLeafletMap(){
   lmap = L.map('heatmapArea').setView([myLat, myLng], 5);
-
+/*
   var tiles = L.tileLayer('http://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
       attribution: '<a href="https://www.mapbox.com/about/maps/">Terms and Feedback</a>',
       id: 'examples.map-20v6611k'
   }).addTo(lmap);
+*/
+  var osmLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18
+    }).addTo(lmap);
 
   var dummy = new Array();
   var options = {

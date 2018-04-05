@@ -11,21 +11,22 @@
     "url": "http://www.opendata-heatmap.com"
   },
   "dependencies": {
-    "express": "3.2.4",
-    "nano": "*",
-    "gm": "*",
-    "http-proxy": "*",
-    "jade": "*",
-    "mysql": "*",
-    "xml2js": "*",
-    "request":"*",
-    "batch":"*",
-    "string":"*",
-    "line-by-line":"*"
+    "batch": "^0.5.0",
+    "express": "^3.2.4",
+    "csv": "^0.3.6",
+    "gm": "^1.14.2",
+    "http-proxy": "^0.10.3",
+    "jade": "^0.35.0",
+    "line-by-line": "^0.1.1",
+    "mysql": "^2.15.0",
+    "nano": "^4.4.0",
+    "request": "^2.33.0",
+    "string": "^1.8.0",
+    "xml2js": "^0.2.8"
   },
   "devDependencies": {},
   "repository": "",
   "keywords": [
-    "vuparvous"
+    "opendata"
   ]
 }
