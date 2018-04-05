@@ -39,7 +39,7 @@
       ]]>
   </get_geodata>
 	<!--  retourne la liste des dataset proche de lat/lon-->
-	<get_geo_datasets>
+	<get_geo_datasets_old>
 	    <![CDATA[
             SELECT id, title, avg(lat) lat, avg(lng) lng, data_url, user_url
               FROM (
@@ -50,12 +50,40 @@
                                AND abs(geodata.longitude - :longitude) < :radius
                                AND abs(geodata.latitude - :latitude) < :radius
                              ORDER BY abs(geodata.longitude - :longitude) + abs(geodata.latitude - :latitude) asc
+                             LIMIT 1
                      ) A
                    GROUP BY id, title, data_url, user_url
              LIMIT :limit
 	     ]]>
-	</get_geo_datasets>
+	</get_geo_datasets_old>
 	
+	<get_geo_datasets>
+		<![CDATA[
+			SELECT id, 
+			       title, 
+			       SUBSTRING_INDEX(GROUP_CONCAT(lat order by ord),',',1) as lat, 
+			       SUBSTRING_INDEX(GROUP_CONCAT(lng order by ord) ,',',1) as lng, 
+			       data_url, 
+			       user_url
+			FROM (
+				SELECT dataset.id as id, 
+		           dataset.title as title, 
+		           dataset.data_url as data_url, 
+		           dataset.user_url as user_url, 
+		           geodata.latitude as lat, 
+		           geodata.longitude as lng, 
+		           abs(geodata.longitude - :longitude) + abs(geodata.latitude - :latitude) as ord
+				  FROM geodata, 
+						   dataset
+				 WHERE geodata.dataset_id = dataset.id
+				   AND abs(geodata.longitude - :longitude) < :radius
+				   AND abs(geodata.latitude - :latitude) < :radius
+				 ORDER BY abs(geodata.longitude - :longitude) + abs(geodata.latitude - :latitude) asc
+			) as x
+			GROUP BY id, title, data_url, user_url
+			limit :limit
+		]]>
+	</get_geo_datasets>
 	<!-- retourne la liste des dataset dont le nom cotien name -->
 	<get_ajax_dataset>
 	    SELECT DISTINCT dataset.id, dataset.name 

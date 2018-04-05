@@ -89,7 +89,7 @@ function listFiles(position, map) {
 	var latLng = {
 			latitude:position.lat(),
 			longitude:position.lng(),
-			radius:radius * 4
+			radius:radius
 	};
 	console.log(latLng);
 	$.getJSON('api/geo-datasets', latLng, function(data) {
