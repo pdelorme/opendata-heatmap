@@ -30,6 +30,36 @@
 	     group by round(geodata.longitude*:tile), round(geodata.latitude*:tile)
 	    ]]>
 	</get_area_geodata>
+
+		<!-- retourne la liste des points dans la zone west/east/north/south -->
+	<get_area_geodata_group>
+	    <![CDATA[
+	    select round(latitude*:tile)/:tile as lat, 
+	           round(longitude*:tile)/:tile as lng, 
+	           sum(nb_points) as nb
+	      from geodata_group:group
+	       where longitude > :west
+	        and longitude < :east
+	        and latitude < :north
+	        and latitude > :south
+	     group by round(longitude*:tile), round(latitude*:tile)
+	    ]]>
+	</get_area_geodata_group>
+
+		<!-- retourne la liste des points dans la zone west/east/north/south filtré par dataset-->
+	<get_area_geodata_ds>
+	    <![CDATA[
+	    select geodata.latitude lat, geodata.longitude lng, count(*) nb
+	      from geodata
+	       where geodata.longitude > :west
+	        and geodata.longitude < :east
+	        and geodata.latitude < :north
+	        and geodata.latitude > :south
+	        and geodata.dataset_id in (:datasets)
+	     group by round(geodata.longitude*:tile), round(geodata.latitude*:tile)
+	    ]]>
+	</get_area_geodata_ds>
+
   <!-- retourne la liste des points groupé par maille de 1/:tile -->
   <get_geodata>
       <![CDATA[
@@ -79,6 +109,7 @@
 				   AND abs(geodata.longitude - :longitude) < :radius
 				   AND abs(geodata.latitude - :latitude) < :radius
 				 ORDER BY abs(geodata.longitude - :longitude) + abs(geodata.latitude - :latitude) asc
+				 LIMIT 100
 			) as x
 			GROUP BY id, title, data_url, user_url
 			limit :limit

@@ -31,3 +31,28 @@ CREATE TABLE IF NOT EXISTS `geodata` (
   `creation_date` datetime,
   KEY `latitude` (`latitude`,`longitude`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- tables de regroupement pour optimissation
+--
+CREATE TABLE `geodata_group32` (
+  `latitude` double NOT NULL,
+  `longitude` double NOT NULL,
+  `nb_points` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+SELECT * FROM odhm.geodata;
+
+
+CREATE TABLE `geodata_group256` (
+  `latitude` double NOT NULL,
+  `longitude` double NOT NULL,
+  `nb_points` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+SELECT * FROM odhm.geodata;
+
+CREATE TABLE `geodata_group2048` (
+  `latitude` double NOT NULL,
+  `longitude` double NOT NULL,
+  `nb_points` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+SELECT * FROM odhm.geodata;

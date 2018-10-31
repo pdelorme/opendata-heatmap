@@ -44,10 +44,37 @@ exports.get_area_geodata = function(req,res){
 			west	: params.west,
 			south	: params.south,
 			north	: params.north,
-			tile    : params.tile,
+			tile    : params.tile
 	};
-	
-	db.list('get_area_geodata',queryObject, function(err, data){
+	var sql_query = 'get_area_geodata';
+	console.log(params.tile);
+	if(params.tile<=2048){
+		sql_query+='_group';
+		var group=2048;
+		if(params.tile<=32) { group=32 }
+		else if(params.tile<=256) { group=256 }
+		queryObject.group = group;
+	}
+	db.list(sql_query,queryObject, function(err, data){
+	  return res.send(data);
+	});
+};
+
+/**
+ * retourne la liste des données géo dans la zone selectionnées
+ */
+exports.get_area_geodata_ds = function(req,res){
+	var params = req.query;
+	var queryObject = {
+			east 	: params.east,
+			west	: params.west,
+			south	: params.south,
+			north	: params.north,
+			tile    : params.tile,
+			datasets : params.datasets 
+	};
+
+	db.list('get_area_geodata_ds',queryObject, function(err, data){
 	  return res.send(data);
 	});
 };

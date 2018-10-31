@@ -16,7 +16,7 @@ function initLeafletMap(){
 */
   var osmLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 18
+      maxZoom: 20
     }).addTo(lmap);
 
   var dummy = new Array();
@@ -59,6 +59,17 @@ function updateMap(map){
   }
   loading=true;
   var bound = map.getBounds();
+  var datasets = "";
+  $("input:checked").each(function(index, elem){
+    var id=elem.id.substring(8);
+    if(datasets==""){
+      datasets = ""+id;
+    } else {
+      datasets = datasets+","+id;
+    }
+    
+  });
+  console.log(datasets);
   console.log("zoom",map.getZoom(),Math.pow(2,map.getZoom()));
   var queryObject = {
       north: bound.getNorth(),
@@ -66,8 +77,13 @@ function updateMap(map){
       east : bound.getEast(),
       west : bound.getWest(),
       tile : Math.pow(2,map.getZoom()),
+      datasets : datasets
   };
-	$.getJSON('/api/area-geodata', queryObject, function(data) {
+  var request = '/api/area-geodata';
+  if(datasets!=""){
+    request= '/api/area-geodata-ds'
+  }
+	$.getJSON(request, queryObject, function(data) {
 	    var geoData = new Array();
 		//var googleLatLng = new Array(); 
 		var max = 0;
@@ -76,7 +92,7 @@ function updateMap(map){
 		  if(max<val.nb)
 		    max = val.nb;
 		});
-        radius = Math.max(3,Math.log(max)*1);
+    radius = Math.max(3,Math.log(max)*1);
 		console.log("nb points,max,radius:",geoData.length,max,radius);
 
 		heatmap.setLatLngs(geoData);
@@ -141,7 +157,13 @@ function listFiles(position, map) {
 			} else {
 			  dist+=new Number(val.d).toFixed(1)+"&nbsp;Km";
 			}
-			$("#datasets").append("<tr><td>"+dist+"</td><td>"+unescape(val.title)+"</td><td><a class='btn btn-default' href='"+unescape(val.data_url)+"'><span class='glyphicon glyphicon-star'>csv</span></a></td></tr>");
+			$("#datasets")
+        .append("<tr>")
+        .append("<td>"+dist+"</td>")
+        .append("<td>"+unescape(val.title)+"</td>")
+        .append("<td>"+val.id+"<input id='dataset_"+val.id+"' type='checkbox'></td>")
+        .append("<td><a class='btn btn-default' href='"+unescape(val.data_url)+"'><span class='glyphicon glyphicon-star'>csv</span></a></td>")
+        .append("</tr>");
 		});
 	});
 }

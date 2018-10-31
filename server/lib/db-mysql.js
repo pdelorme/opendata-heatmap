@@ -1,7 +1,7 @@
 var mysql = require('mysql');
 var fs    = require('fs');
 var xml2js = require('xml2js');
-var debug = false;
+var debug = true;
 
 module.exports = {
   init_db : function(host, database, user, password){
