@@ -53,11 +53,11 @@ function parseCSVReader(reader, columnFilter, rowProcessor, endCallback) {
       rowProcessor(data);
   })
   .on('error', function(e){
-    console.log('>> Error while reading stream:',e);
+    if( debug ) console.log('>> Error while reading stream:',e);
     endCallback('error');
   })
   .on('end', function(){
-      console.log('>> Read entire stream');
+      if( debug ) console.log('>> Read entire stream');
       endCallback();
   }))
 }
@@ -309,7 +309,7 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
   } 
 
   // returning last line.
-  console.log(lastRowIndex);
+  // console.log(lastRowIndex);
   return chunk.substring(lastRowIndex);
 }
 
@@ -331,6 +331,7 @@ function splitCSV () {
   }
 
   function next (stream, buffer, lastChunk) {
+    if( debug ) console.log("next buffer :",buffer);
     // soFar + buffer.
     buffer = (soFar != null ? soFar : '') + buffer;
     if( firstLine ){
@@ -354,12 +355,12 @@ function splitCSV () {
   return through(
     // write
     function (b) {
-      next(this, decoder.write(b), false)
+      next(this, decoder.write(b), false);
     },
     //end
     function () {
       if(decoder.end()){
-        next(this, decoder.end(), true)
+        next(this, decoder.end(), true);
       }
       // soFar should be null
       if(soFar && soFar.size > 0) {

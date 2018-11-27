@@ -3,6 +3,7 @@
  */
 var assert = require('assert');
 var stream = require('stream');
+var fs = require('fs');
 var config    = require('./config');
 var fileUtils = require('./libs/fileUtils');
 var csvTools  = require('./libs/csvTools');
@@ -103,7 +104,7 @@ describe('csvTools', function() {
     it('parsing csv chunk', function(done) {
       rowIndex = 0;
       result = csvTools.parseCSVChunk("12,45.7,\"toto\",\'titi',69\n  24 ,\t2 ,  \"tata\"  ,  toto  ,35\n.5,123456789,\"hello\nworld\",\"hello\tworld\",\"hello\r\nworld\"",',', function(row){
-        console.log(row);
+        // console.log(row);
         assert.equal(row.length, 5);
         switch (rowIndex++) {
           case 0 :
@@ -169,13 +170,13 @@ describe('csvTools', function() {
      itStream.push("\tworld\",\"hello\r\nworld\"");
      itStream.push(null);
      rowIndex = 0;
-     result1 = csvTools.parseCSVReader(itStream,
+     csvTools.parseCSVReader(itStream,
         function( column ){ 
           // column Filter
         },
         function( row ){
           // row Processor
-          // console.log(">test>", row);
+          // console.log(">>>test>", row);
           assert.equal(row.length, 5);
           switch (rowIndex++) {
             case 0 :
@@ -204,12 +205,57 @@ describe('csvTools', function() {
           }
         }, 
         function() {
+          assert.equal(rowIndex,3);
           // end callback
           done();
         }
       );
     });
 
+    it('parsing csv file stream with short buffer', function(done) {
+      var reader = fs.createReadStream("test.csv", { highWaterMark: 8 });
+      rowIndex = 0;
+      csvTools.parseCSVReader(reader,
+        function( column ){ 
+          // column Filter
+        },
+        function( row ){
+          // row Processor
+          // console.log(">+++test>", row);
+          assert.equal(row.length, 5);
+          switch (rowIndex++) {
+            case 0 :
+              assert.equal(row[0],12);
+              assert.equal(row[1],45.7);
+              assert.equal(row[2],"toto");
+              assert.equal(row[3],"titi");
+              assert.equal(row[4],69);
+              break;
+            case 1 :
+              assert.equal(row[0],24);
+              assert.equal(row[1],2);
+              assert.equal(row[2],"tata");
+              assert.equal(row[3],"toto");
+              assert.equal(row[4],35);
+              break;
+            case 2 :
+              assert.equal(row[0],0.5);
+              assert.equal(row[1],123456789);
+              assert.equal(row[2],"hello\nworld");
+              assert.equal(row[3],"hello\tworld");
+              assert.equal(row[4],"hello\n\nworld");
+              break;
+            default :
+              throw new Error("no 3rd row :"+row);
+          }
+        }, 
+        function() {
+          assert.equal(rowIndex,3);
+          // end callback
+          done();
+        }
+      );
+    });
     /*
     it('extractCsvGeoObjects', function(done) {
       geoTools.extractCsvGeoObjects(
