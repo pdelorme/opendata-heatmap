@@ -10,7 +10,7 @@
     "email": "patrice.delorme@gmail.com",
     "url": "http://opendataheatmap.patricedelorme.com"
   },
-  "scripts" : {
+  "scripts": {
     "test": "./node_modules/mocha/bin/mocha"
   },
   "dependencies": {
@@ -25,7 +25,8 @@
     "csv": "^0.3.7",
     "csv-parse": "^3.1.3",
     "iconv-lite": "^0.4.24",
-    "event-stream": "^4.0.1"
+    "event-stream": "^4.0.1",
+    "stringreader": "^1.1.0"
   },
   "devDependencies": {
     "mocha": "^5.2.0"

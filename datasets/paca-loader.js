@@ -4,6 +4,8 @@
 var config    = require('./config');
 var fileUtils = require('./libs/fileUtils');
 var csvTools  = require('./libs/csvTools');
+var geoTools  = require('./libs/geoTools');
+
 var odhm      = require('./libs/odhmService');
 
 var paca      = require('./paca/paca-loader');
@@ -25,7 +27,7 @@ function main(){
           quote: '"',
           encoding: 'utf-8'
       };
-      csvTools.extractCsvGeoObjects(thisDatasetInfo.filepath,
+      geoTools.extractCsvGeoObjects(thisDatasetInfo.filepath,
           function(geoObject){
             odhm.insertGeodata(dataset_id, geoObject, null);
           },
