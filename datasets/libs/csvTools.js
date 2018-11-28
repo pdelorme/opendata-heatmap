@@ -2,7 +2,7 @@
  * Outils de parsing des CSV.
  */
 
-const debug = false;
+const debug = true;
 
 const 
   fs = require('fs'),
@@ -50,6 +50,7 @@ function parseCSVReader(reader, columnFilter, rowProcessor, endCallback) {
   reader
   .pipe(splitCSV())
   .pipe(es.mapSync(data => {
+    console.log(">>> ", data);
       rowProcessor(data);
   })
   .on('error', function(e){
@@ -206,15 +207,17 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
   
   // parsing chunk.
   for( i=0; i < chunk.length; i++ ){
-    // starting a column, skiping white spaces?
-    if( newCol || endCol){
-      if(debug) console.log("skipping white spaces");
-      while( i<chunk.length && (chunk[i] === ' ')) { i++; }
-    }
     // reading chars.
     c1 = chunk[i];
     // console.log(c1);
     c2 = chunk[i+1];
+
+    // starting a column, skiping white spaces?
+    if( (newCol || endCol) && c1 === ' ' ){
+      if(debug) console.log("skipping white spaces");
+      continue;
+    }
+
     // starting a column, is it quoted ?
     if( newCol ){      // init column
       if(debug) console.log("new column : checking quotes");
@@ -229,7 +232,8 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
     }
 
     // found a quote is it doubled ?
-    if( c1==='\'' || c1==='"') {
+    if( c1==='\'' || c1==='"' ) {
+      if(debug) console.log("escaping doubled quotes");
       if( c2===c1 ){
         // doubled quote : skip next and continue.
         if(debug) console.log("escaping doubled quotes");
@@ -263,9 +267,9 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
     if( quote==='' ) {
       eol = false;
       if( c1==='\n' ) { eol = true; }
-      if( c1==='\r' && c2==='\n' ) { eol = true; i++; }
+      if( c1==='\r' && c2 && c2==='\n' ) { eol = true; i++; }
       if( eol) {
-        if( debug ) console.log("end of line");
+        if( debug ) console.log("end of line", c1.charCodeAt(0), c2?c2.charCodeAt(0):'');
         // end of col
         values.push(cleanValue(value));
         // end of line.
@@ -280,7 +284,10 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
 
     if( endCol ){
       // invalid state. col should be terminated.
-      throw new Error("invalid CSV. column should end now.");
+      console.log("column should end now", ">"+chunk.substring(i-10>0?i-10:0, i)+"*"+chunk.substring(i,i+10)+"<");
+      console.log("char are",c1.charCodeAt(0), c2?c2.charCodeAt(0):'-');
+      console.log("index is",i);
+      throw new Error("invalid CSV. column should end now");
     }
     value=value+c1;
   }
