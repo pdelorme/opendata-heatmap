@@ -214,9 +214,6 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
     last = current;
     // reading chars.
     current = chunk[i];
-    
-    // console.log(c1);
-    c2 = chunk[i+1];
 
     // starting a column, skiping white spaces?
     if( (newCol || endCol) && current === ' ' ){
