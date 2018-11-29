@@ -2,7 +2,8 @@
  * Outils de parsing des CSV.
  */
 
-const debug = true;
+const LogLevel = { "DEBUG":1,"DEBUG2":2,"INFO":3};
+const Log = LogLevel.INFO;
 
 const 
   fs = require('fs'),
@@ -50,15 +51,15 @@ function parseCSVReader(reader, columnFilter, rowProcessor, endCallback) {
   reader
   .pipe(splitCSV())
   .pipe(es.mapSync(data => {
-    console.log(">>> ", data);
-      rowProcessor(data);
+    //console.log(">>> ", data);
+    rowProcessor(data);
   })
   .on('error', function(e){
-    if( debug ) console.log('>> Error while reading stream:',e);
+    if( Log == LogLevel.DEBUG ) console.log('>> Error while reading stream:',e);
     endCallback('error');
   })
   .on('end', function(){
-      if( debug ) console.log('>> Read entire stream');
+      if( Log == LogLevel.DEBUG ) console.log('>> Read entire stream');
       endCallback();
   }))
 }
@@ -179,7 +180,7 @@ function buildRawResult(value, values){
 }
 
 function cleanValue(value){
-  if ( debug ) console.log(">>", value);
+  if ( Log == LogLevel.DEBUG ) console.log(">>", value);
   if(value)
     return value.trim();
   return value;
@@ -204,58 +205,68 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
   newCol=true;
   endCol=false;
   values=[];
-  
+  current='';
+  closing = false;
+
   // parsing chunk.
   for( i=0; i < chunk.length; i++ ){
+    // last char
+    last = current;
     // reading chars.
-    c1 = chunk[i];
+    current = chunk[i];
+    
     // console.log(c1);
     c2 = chunk[i+1];
 
     // starting a column, skiping white spaces?
-    if( (newCol || endCol) && c1 === ' ' ){
-      if(debug) console.log("skipping white spaces");
+    if( (newCol || endCol) && current === ' ' ){
+      if( Log == LogLevel.DEBUG ) console.log("skipping white spaces");
       continue;
     }
 
     // starting a column, is it quoted ?
     if( newCol ){      // init column
-      if(debug) console.log("new column : checking quotes");
       value='';
       quote='';
       newCol=false;
       // is it quoted ?
-      if( c1==='\"' || c1==='\'' ){
-        quote = c1;
+      if( current==='\"' || current==='\'' ){
+        quote = current;
+        closing = false;
+        if( Log == LogLevel.DEBUG ) console.log("new quoted column", quote);
         continue;
       }
+      if( Log == LogLevel.DEBUG ) console.log("new column");
     }
 
     // found a quote is it doubled ?
-    if( c1==='\'' || c1==='"' ) {
-      if(debug) console.log("escaping doubled quotes");
-      if( c2===c1 ){
-        // doubled quote : skip next and continue.
-        if(debug) console.log("escaping doubled quotes");
-        value=value+c1+c1;
-        i++;
+    if( current === quote && last === current ) {
+      if( Log == LogLevel.DEBUG ) console.log("escaping doubled quotes");
+      closing = false;
+      value=value+current;
+      continue;
+    }
+
+    // found a quote is it doubled ?
+    if( current === quote ) {
+      if( Log == LogLevel.DEBUG ) console.log("closing quote ?");
+      closing=true;
+      continue;
+    }
+
+    if( last === quote && closing ) {
+      if( Log == LogLevel.DEBUG ) console.log("after closing quote");
+      quote='';
+      endCol = true;
+      if( current === ' ') {
+        if( Log == LogLevel.DEBUG ) console.log("skipping white spaces after quote");
         continue;
       }
     }
 
-    // found a quote. end of column ! next char must terminate column.
-    if( c1===quote ){
-      if(debug) console.log("closing quote");
-      // right quote.
-      // values = buildRawResult(value, values);
-      quote='';
-      endCol = true;
-      continue;
-    }
-
     // found separator in valid state. end of col !
-    if( quote==='' && c1===separator ){
-      if( debug ) console.log("end of col");
+    if( quote==='' && current===separator ){
+      if( Log == LogLevel.DEBUG2 ) console.log("end of col ", cleanValue(value));
       //end of column.
       values.push(cleanValue(value));
       endCol = false;
@@ -263,46 +274,49 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
       continue;
     }
 
+    // skipping /r
+    if( current === '\r'){
+      value=value+current;
+      continue;
+    }
+
     // found end of line in valid state. process row !
-    if( quote==='' ) {
-      eol = false;
-      if( c1==='\n' ) { eol = true; }
-      if( c1==='\r' && c2 && c2==='\n' ) { eol = true; i++; }
-      if( eol) {
-        if( debug ) console.log("end of line", c1.charCodeAt(0), c2?c2.charCodeAt(0):'');
-        // end of col
-        values.push(cleanValue(value));
-        // end of line.
-        rowProcessor(values);
-        lastRowIndex = i+1;
-        // new line.
-        endCol = false;
-        newCol = true;
-        values=[];
-      }
+    if( quote==='' && current==='\n') {
+      if( Log == LogLevel.DEBUG2 ) console.log("end of line", cleanValue(value));
+      // end of col
+      values.push(cleanValue(value));
+      // end of line.
+      rowProcessor(values);
+      lastRowIndex = i+1;
+      // new line.
+      endCol = false;
+      newCol = true;
+      values=[];
+      continue;
     }
 
     if( endCol ){
       // invalid state. col should be terminated.
       console.log("column should end now", ">"+chunk.substring(i-10>0?i-10:0, i)+"*"+chunk.substring(i,i+10)+"<");
-      console.log("char are",c1.charCodeAt(0), c2?c2.charCodeAt(0):'-');
+      console.log("char are",last.charCodeAt(0), current?current.charCodeAt(0):'-');
       console.log("index is",i);
       throw new Error("invalid CSV. column should end now");
     }
-    value=value+c1;
+    value=value+current;
   }
   // end of chunk not reached. 
-  if( endCol ){
-    if ( debug ) console.log("last row");
-    values.push(cleanValue(value));
-    // end of line.
-    rowProcessor(values);
-    return '';
-  }
+  // if( closing || endCol ){
+  //   if ( Log == LogLevel.DEBUG2 ) console.log("last row",cleanValue(value));
+  //   values.push(cleanValue(value));
+  //   // end of line.
+  //   rowProcessor(values);
+  //   return '';
+  // }
   // last line. is is complete?
-  if(processTrailing) {
-    if ( debug ) console.log("processing trail");
-    if ( quote==='' ){
+  if( processTrailing ) {
+    if ( Log == LogLevel.DEBUG2 ) console.log("processing trail");
+    if ( quote==='' || closing || endCol ){
+      if ( Log == LogLevel.DEBUG2 ) console.log("end of col", cleanValue(value));
       // end of col
       values.push(cleanValue(value));
       // end of line.
@@ -311,13 +325,14 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
       return '';
     };
     // the last column is expeting some closing quote.
-    console.log("last value ", values, value, endCol);
+    console.log("ERROR : last value ", values, value, endCol);
     throw new Error("invalid CSV. trailing column is not closed");
   } 
 
   // returning last line.
-  // console.log(lastRowIndex);
-  return chunk.substring(lastRowIndex);
+  soFar = chunk.substring(lastRowIndex)
+  if ( Log == LogLevel.DEBUG2 ) console.log("unprocessed chunk",soFar, lastRowIndex);
+  return soFar;
 }
 
 
@@ -338,7 +353,6 @@ function splitCSV () {
   }
 
   function next (stream, buffer, lastChunk) {
-    if( debug ) console.log("next buffer :",buffer);
     // soFar + buffer.
     buffer = (soFar != null ? soFar : '') + buffer;
     if( firstLine ){
@@ -366,9 +380,9 @@ function splitCSV () {
     },
     //end
     function () {
-      if(decoder.end()){
-        next(this, decoder.end(), true);
-      }
+      if( Log == LogLevel.DEBUG2 ) console.log("ending stream", decoder.end());
+      next(this, decoder.end(), true);
+      
       // soFar should be null
       if(soFar && soFar.size > 0) {
         return emit('error', new Error('maximum buffer reached'))
