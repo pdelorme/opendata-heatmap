@@ -2,13 +2,13 @@
  * Outil de parsing des coordonées geo.
  */
 
-const 
+const
   csvTools = require('./csvTools');
 
 
 module.exports = {
-    extractCsvGeoObjects : function(filename, processGeoObject, endCallback){
-      extractCsvGeoObjects(filename, processGeoObject, endCallback);
+    parseCSVFile : function(filename, processGeoObject, endCallback){
+      parseCSVFile(filename, processGeoObject, endCallback);
     },
     isGeoDataHeader: function(headers){
       return isGeoDataHeader(headers)
@@ -23,13 +23,13 @@ module.exports = {
  * extract geoCoordinates from csv files
  * @param filename
  * @param processGeoObject un geoObject to process.
- * @param callback(err) 
+ * @param callback(err)
  *--/
 function extractCsvGeoObjects_deprecated(filename, processGeoObject, callback, options){
   // console.log("processing "+filename);
   csv()
   .from.path(filename,options?options:csvOptions)
-  .on('end', function() {          
+  .on('end', function() {
       // console.log(filename +":"+geoObjects.length);
     if(callback)
       callback();
@@ -44,18 +44,20 @@ function extractCsvGeoObjects_deprecated(filename, processGeoObject, callback, o
 }
 */
 
-function extractCsvGeoObjects(filename, processGeoObject, endCallback){
+function parseCSVFile(filename, processGeoObject, endCallback){
   csvTools.parseCSVFile(
-    filename, 
+    filename,
     function(columns){
-      return !isGeoDataHeader(columns);
-    }, 
+      // console.log("checking columns", columns);
+      return isGeoDataHeader(columns);
+    },
     function(row){
+      // console.log("processing row", row);
       geoObject = parseData(row);
       if(geoObject){
         processGeoObject(geoObject);
       }
-    }, 
+    },
     endCallback);
 }
 
@@ -89,48 +91,64 @@ function isGeoDataHeader(headers){
  * @returns {latitude,longitude}
  */
 function parseData(row){
+  // wgs84
   if(row.wgs84){
     return gpsToGeoObject(row.wgs84);
   }
+
+  // geo_shape
   if(row.geo_shape){
     geo_shape = JSON.parse(row.geo_shape);
     if(geo_shape.type=="Point"){
       var dataObject = {
-          latitude  : geo_shape.coordinates[0],
-          longitude : geo_shape.coordinates[1],
+        latitude  : geo_shape.coordinates[0],
+        longitude : geo_shape.coordinates[1],
       };
       return dataObject;
     }
   }
+
+  // geo_point_2d
   if(row.geo_point_2d){
     return gpsToGeoObject(row.geo_point_2d);
   }
+
+  // lat_lon
   if(row.lat_lon){
     return gpsToGeoObject(row.lat_lon);
-  }      
+  }
+
+  // geometry_x_y
   if(row.geometry_x_y){
     return gpsToGeoObject(row.geometry_x_y);
-  }      
+  }
+
+  // latitude, longitude
   if(row.latitude && row.longitude){
       var dataObject = {
-          latitude  : row.latitude,
-          longitude : row.longitude
+        latitude  : row.latitude,
+        longitude : row.longitude
       };
       return dataObject;
   }
+
+  // Latitude, Longitude
   if(row.Latitude && row.Longitude){
       var dataObject = {
-              latitude  : row.Latitude,
-              longitude : row.Longitude
+        latitude  : row.Latitude,
+        longitude : row.Longitude
       };
       return dataObject;
-  } else if(row.lat && row.lon){
+  }
+
+  // lat, lon
+  if(row.lat && row.lon){
       var dataObject = {
-              latitude  : row.lat,
-              longitude : row.lon
-          };
+        latitude  : row.lat,
+        longitude : row.lon
+      };
       return dataObject;
-  } 
+  }
 }
 /**
  * transforme la chaine "lat,lon" en objet {latitude:lat, longitude:lon}
@@ -144,4 +162,22 @@ function gpsToGeoObject(gps){
       longitude : gpsSplit[1].trim(),
   };
   return geoObject;
+}
+
+/**
+ * check that latitude and longitude are acceptable. i.e. numbers withing lat/lon range.
+ * @param the geoObject
+ * @return true only if both latitude and longitude are acceptable.
+ */
+function validateGeoObject(geoObject){
+  if(isNaN(geoObject.longitude) || isNaN(geoObject.latitude))
+    return false;
+  if(geoObject.latitude<-90 || geoObject.latitude>90)
+    return false;
+  if(geoObject.longitude<-180 || geoObject.longitude>180)
+    return false;
+  return false;
+  // var floatRX="[0-9]*\.?[0-9]+";
+  // if( geoObject.longitude.match("^"+floatRX+"(E|W)$")) {
+  //}
 }

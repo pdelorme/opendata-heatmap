@@ -5,7 +5,7 @@
 const LogLevel = { "DEBUG":1,"DEBUG2":2,"INFO":3};
 const Log = LogLevel.INFO;
 
-const 
+const
   fs = require('fs'),
   Batch = require('batch'),
   es = require('event-stream'),
@@ -48,14 +48,34 @@ function parseCSVFile(filename, columnFilter, rowProcessor, endCallback){
 }
 
 function parseCSVReader(reader, columnFilter, rowProcessor, endCallback) {
+  var firstLine = true;
+  var filter = columnFilter;
+  var csvStream = splitCSV();
   reader
-  .pipe(splitCSV())
+  .pipe(csvStream)
   .pipe(es.mapSync(data => {
-    //console.log(">>> ", data);
+    // console.log(">+>>",data);
+    if( filter ) {
+      //console.log(">+>> columnFFilter");
+      if( firstLine ){
+        //console.log(">+>> firstLine");
+        columns = data;
+        firstLine = false;
+        if( !columnFilter( columns ) ){
+           // skip file.
+           if( Log == LogLevel.DEBUG ) console.log("header rejected, skiping stream");
+           csvStream.end();
+        }
+        return;
+      }
+      json = arrayToJson(data, columns);
+      rowProcessor(json);
+      return;
+    }
     rowProcessor(data);
   })
   .on('error', function(e){
-    if( Log == LogLevel.DEBUG ) console.log('>> Error while reading stream:',e);
+    console.log('>> Error while reading stream:',e);
     endCallback('error');
   })
   .on('end', function(){
@@ -74,7 +94,7 @@ function parseCSVLine(line, separator, columns){
   colIndex=0;
   values=[];
   json= new Object();
-  for(i=0; i < line.length;i++){
+  for(var i=0; i < line.length;i++){
     c = line[i];
     if(newCol){
       newCol=false;
@@ -156,8 +176,8 @@ function buildJsonResult(colIndex, columns, value, json){
  * @param columns un tableau de colonnes.
  */
 function arrayToJson(values, columns){
-  json = new Object();
-  for(i=0;i<values.length;i++){
+  var json = new Object();
+  for(var i=0;i<values.length;i++){
     column = columns[i];
     if(column)
       colum=column.toLowerCase();
@@ -199,8 +219,8 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
     return '';
 
   // index of last unparsed data.
-  lastRowIndex=0; 
-  
+  lastRowIndex=0;
+
   // new line
   newCol=true;
   endCol=false;
@@ -301,7 +321,7 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
     }
     value=value+current;
   }
-  // end of chunk not reached. 
+  // end of chunk not reached.
   // if( closing || endCol ){
   //   if ( Log == LogLevel.DEBUG2 ) console.log("last row",cleanValue(value));
   //   values.push(cleanValue(value));
@@ -324,7 +344,7 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
     // the last column is expeting some closing quote.
     console.log("ERROR : last value ", values, value, endCol);
     throw new Error("invalid CSV. trailing column is not closed");
-  } 
+  }
 
   // returning last line.
   soFar = chunk.substring(lastRowIndex)
@@ -341,9 +361,7 @@ function splitCSV () {
   var decoder = new Decoder()
   var soFar = null;
   var firstLine = true;
-  var last = false;
   var delimiter = '';
-  var columns = [];
 
   function emit(stream, piece) {
       stream.queue(piece)
@@ -360,13 +378,7 @@ function splitCSV () {
     }
     //console.log("last :",lastChunk);
     soFar = parseCSVChunk(buffer, delimiter, function( values ){
-      if( firstLine ){
-        columns = values;
-        firstLine = false;
-      } else {
-        // json = arrayToJson(values, columns);
-        emit(stream, values);
-      }
+      emit(stream, values);
     }, lastChunk);
   }
 
@@ -379,7 +391,7 @@ function splitCSV () {
     function () {
       if( Log == LogLevel.DEBUG2 ) console.log("ending stream", decoder.end());
       next(this, decoder.end(), true);
-      
+
       // soFar should be null
       if(soFar && soFar.size > 0) {
         return emit('error', new Error('maximum buffer reached'))
