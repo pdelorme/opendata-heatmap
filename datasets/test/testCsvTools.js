@@ -10,6 +10,7 @@ describe('csvTools', function() {
 
   it('parsing simple csv with number ending', function() {
     result = csvTools.parseCSVLine("12,45.7,\"toto\",\'titi',69",',');
+    // console.log(">>",result);
     assert.equal(result.length, 5);
     assert.equal(result[0],12);
     assert.equal(result[1],45.7);
@@ -20,6 +21,7 @@ describe('csvTools', function() {
 
   it('parsing simple csv string ending', function() {
     result = csvTools.parseCSVLine("12,45.7,\"to'to\",'titi',\"tata\"",',');
+    // console.log(">>",result);
     assert.equal(result.length, 5);
     assert.equal(result[0],12);
     assert.equal(result[1],45.7);
@@ -30,6 +32,7 @@ describe('csvTools', function() {
 
   it('parsing simple csv with extra spaces', function() {
     result = csvTools.parseCSVLine(" 12 , 45.7 ,\" toto \",\' titi ', 69 ",',');
+    // console.log(">>",result);
     assert.equal(result.length, 5);
     assert.equal(result[0],12);
     assert.equal(result[1],45.7);
@@ -40,6 +43,7 @@ describe('csvTools', function() {
 
   it('parsing csv with columns and string ending', function() {
     result = csvTools.parseCSVLine("12,45.7,\"to'to\",'titi',\"tata\"",',',['val1','val2','text1','text2','last_val']);
+    // console.log(">>",result);
     assert.equal(Object.keys(result).length, 5);
     assert.equal(result.val1,12);
     assert.equal(result.val2,45.7);
@@ -50,6 +54,7 @@ describe('csvTools', function() {
 
   it('parsing csv with columns and number ending', function() {
     result = csvTools.parseCSVLine("12,45.7,\"to'to\",'titi',22",',',['val1','val2','text1','text2','last_val']);
+    // console.log(">>",result);
     assert.equal(Object.keys(result).length, 5);
     assert.equal(result.val1,12);
     assert.equal(result.val2,45.7);
@@ -60,6 +65,7 @@ describe('csvTools', function() {
 
   it('parsing simple csv doubled single quotes', function() {
     result = csvTools.parseCSVLine("12,45.7,\"to''to\",22",',');
+    // console.log(">>",result);
     assert.equal(Object.keys(result).length, 4);
     assert.equal(result[0],12);
     assert.equal(result[1],45.7);
@@ -68,16 +74,19 @@ describe('csvTools', function() {
   });
 
   it('parsing simple csv doubled double quotes', function() {
-    result = csvTools.parseCSVLine("12,45.7,\"ti\"\"ti\",22",',');
-    assert.equal(Object.keys(result).length, 4);
+    result = csvTools.parseCSVLine("12,45.7,\"ti\"\"ti\",\"\"\"hello\"\"\",22",',');
+    console.log(">>",result);
+    assert.equal(Object.keys(result).length, 5);
     assert.equal(result[0],12);
     assert.equal(result[1],45.7);
     assert.equal(result[2],"ti\"ti");
-    assert.equal(result[3],22);
+    assert.equal(result[3],"\"hello\"");
+    assert.equal(result[4],22);
   });
 
   it('parsing csv with too many columns', function() {
     result = csvTools.parseCSVLine("12,45.7,\"to'to\",'titi',22",',',['val1','val2','text1','text2','last_val','the_end']);
+    // console.log(">>",result);
     assert.equal(Object.keys(result).length, 6);
     assert.equal(result.val1,12);
     assert.equal(result.val2,45.7);
@@ -89,6 +98,7 @@ describe('csvTools', function() {
 
   it('parsing csv with too few columns', function() {
     result = csvTools.parseCSVLine("12,45.7,\"to'to\",'titi',22",',',['val1','val2','text1','text2']);
+    // console.log(">>",result);
     assert.equal(Object.keys(result).length, 5);
     assert.equal(result.val1,12);
     assert.equal(result.val2,45.7);

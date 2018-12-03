@@ -16,7 +16,7 @@ function main(){
    * called for every file.
    * @param filename
    */
-  function _fileProcessor(datasetInfo, done){ 
+  function _fileProcessor(datasetInfo, done){
     console.log("> processing dataset file :",datasetInfo.filepath);
     var thisDatasetInfo = datasetInfo;
     // 1/ extract geoObjects from files
@@ -27,7 +27,7 @@ function main(){
           quote: '"',
           encoding: 'utf-8'
       };
-      geoTools.extractCsvGeoObjects(thisDatasetInfo.filepath,
+      geoTools.parseCSVFile(thisDatasetInfo.filepath,
           function(geoObject){
             odhm.insertGeodata(dataset_id, geoObject, null);
           },
@@ -44,7 +44,7 @@ function main(){
     })
 
   }
-  
+
   /**
    * download and update the dataset.
    * @param dataset
@@ -79,7 +79,7 @@ function main(){
       );
     });
   }
-  
+
   // 1 - charge le fichier datasets.json
   paca.fetchDatasets(function (dataset_file){
     // 2 - parse le fichier dataset.json

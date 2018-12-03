@@ -22,8 +22,19 @@ module.exports = {
     parseCSVReader: function(reader, columnFilter, rowProcessor, endCallback){
       parseCSVReader(reader, columnFilter, rowProcessor, endCallback);
     },
-    parseCSVLine : function(line, columns, separator){
-      return parseCSVLine(line,columns,separator);
+    parseCSVLine : function(line, separator, columns){
+      var result;
+      parseCSVChunk(line, separator,
+        function(data){
+          if(columns)
+            result = arrayToJson(data, columns)
+          else
+            result = data;
+        },
+        true);
+      return result;
+
+      //return parseCSVLine(line, separator, columns);
     },
     parseCSVChunk : function(chunk, separator, rowProcessor, processTrailing){
       return parseCSVChunk(chunk, separator, rowProcessor, processTrailing);
@@ -87,88 +98,88 @@ function parseCSVReader(reader, columnFilter, rowProcessor, endCallback) {
 /**
  * parse une ligne CSV en gérant intelligement les quotes.
  */
-function parseCSVLine(line, separator, columns){
-  newCol=true;
-  quote='';
-  value='';
-  colIndex=0;
-  values=[];
-  json= new Object();
-  for(var i=0; i < line.length;i++){
-    c = line[i];
-    if(newCol){
-      newCol=false;
-      if(c==='\"' || c==='\''){
-        quote=c;
-        continue;
-      } else
-        quote='';
-    }
-    if(c===quote){
-      // check it is not an escape caractere.
-      if(line[i+1]===quote){
-        // doubled quote : skip next and continue.
-        value=value+c;
-        i++;
-        continue;
-      }
-      // right quote.
-      if(columns)
-        json = buildJsonResult(colIndex++, columns, value, json);
-      else
-        values = buildRawResult(value, values, line);
-      value='';
-      // quote='';
-      i++;
-      if(i<line.length&&line[i]!==separator){
-        console.log("WARNING, invalid quote or separator");
-      }
-      newCol=true;
-      continue;
-    }
-    if(quote==='' && c===separator){
-      //end of column.
-      if(columns)
-        json = buildJsonResult(colIndex++, columns, value, json);
-      else
-        values = buildRawResult(value, values, line);
-      value='';
-      // quote='';
-      newCol=true;
-      continue;
-    }
-    value=value+c;
-  }
-  if(quote===''){
-    // last column with no quote.
-    if(columns)
-      json = buildJsonResult(colIndex++, columns, value, json);
-    else
-      values = buildRawResult(value, values, line);
-  }
-  if(columns) {
-    for(i=colIndex;i< columns.length; i++){
-      json = buildJsonResult(i, columns, undefined, json);
-    }
-    return json;
-  }
-  return values;
-}
+// function parseCSVLine(line, separator, columns){
+//   newCol=true;
+//   quote='';
+//   value='';
+//   colIndex=0;
+//   values=[];
+//   json= new Object();
+//   for(var i=0; i < line.length;i++){
+//     c = line[i];
+//     if(newCol){
+//       newCol=false;
+//       if(c==='\"' || c==='\''){
+//         quote=c;
+//         continue;
+//       } else
+//         quote='';
+//     }
+//     if(c===quote){
+//       // check it is not an escape caractere.
+//       if(line[i+1]===quote){
+//         // doubled quote : skip next and continue.
+//         value=value+c;
+//         i++;
+//         continue;
+//       }
+//       // right quote.
+//       if(columns)
+//         json = buildJsonResult(colIndex++, columns, value, json);
+//       else
+//         values = buildRawResult(value, values, line);
+//       value='';
+//       // quote='';
+//       i++;
+//       if(i<line.length&&line[i]!==separator){
+//         console.log("WARNING, invalid quote or separator");
+//       }
+//       newCol=true;
+//       continue;
+//     }
+//     if(quote==='' && c===separator){
+//       //end of column.
+//       if(columns)
+//         json = buildJsonResult(colIndex++, columns, value, json);
+//       else
+//         values = buildRawResult(value, values, line);
+//       value='';
+//       // quote='';
+//       newCol=true;
+//       continue;
+//     }
+//     value=value+c;
+//   }
+//   if(quote===''){
+//     // last column with no quote.
+//     if(columns)
+//       json = buildJsonResult(colIndex++, columns, value, json);
+//     else
+//       values = buildRawResult(value, values, line);
+//   }
+//   if(columns) {
+//     for(i=colIndex;i< columns.length; i++){
+//       json = buildJsonResult(i, columns, undefined, json);
+//     }
+//     return json;
+//   }
+//   return values;
+// }
 
-function buildJsonResult(colIndex, columns, value, json){
-  if(columns){
-    column = columns[colIndex];
-    if(column)
-      colum=column.toLowerCase();
-    else {
-      column = 'c'+colIndex;
-    }
-    if(value)
-      value=value.trim();
-    json[column]=value;
-  }
-  return json;
-}
+// function buildJsonResult(colIndex, columns, value, json){
+//   if(columns){
+//     column = columns[colIndex];
+//     if(column)
+//       colum=column.toLowerCase();
+//     else {
+//       column = 'c'+colIndex;
+//     }
+//     if(value)
+//       value=value.trim();
+//     json[column]=value;
+//   }
+//   return json;
+// }
 
 /**
  * convertit un tableau de valeur et de colonnes en object json.
@@ -189,23 +200,28 @@ function arrayToJson(values, columns){
       value=value.trim();
     json[column]=value;
   }
+  // fill missing columns with undefined
+  for(j=i;j< columns.length; j++){
+    column = columns[j];
+    json[column] = undefined;
+  }
   return json;
 }
 
-function buildRawResult(value, values){
-  if(value)
-      value=value.trim();
-  values.push(value.trim());
-  return values;
-}
+// function buildRawResult(value, values){
+//   if(value)
+//       value=value.trim();
+//   values.push(value.trim());
+//   return values;
+// }
 
 function cleanValue(value){
   if ( Log == LogLevel.DEBUG ) console.log(">>", value);
   if(value)
     return value.trim();
   return value;
-
 }
+
 /**
  * parse un bout de CSV en gérant intelligement les quotes.
  * @param chunk le buffer en cours.
@@ -214,6 +230,7 @@ function cleanValue(value){
  * @return le reste des données non traités.
  */
 function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
+  // console.log("parseCSVChunk", chunk, separator);
   // exit on empty string.
   if( chunk === null || chunk.trim() === '')
     return '';
@@ -226,7 +243,7 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
   endCol=false;
   values=[];
   current='';
-  closing = false;
+  checkDoubledQuote = false;
 
   // parsing chunk.
   for( i=0; i < chunk.length; i++ ){
@@ -249,7 +266,9 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
       // is it quoted ?
       if( current==='\"' || current==='\'' ){
         quote = current;
-        closing = false;
+        // blanks current car to skip doubled quotes check.
+        //current='_';
+        checkDoubledQuote = false;
         if( Log == LogLevel.DEBUG ) console.log("new quoted column", quote);
         continue;
       }
@@ -257,21 +276,21 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
     }
 
     // found a quote is it doubled ?
+    if( current === quote && last !== current) {
+      if( Log == LogLevel.DEBUG ) console.log("closing quote ?");
+      checkDoubledQuote=true;
+      continue;
+    }
+
+    // found a doubled quote !
     if( current === quote && last === current ) {
       if( Log == LogLevel.DEBUG ) console.log("escaping doubled quotes");
-      closing = false;
+      checkDoubledQuote = false;
       value=value+current;
       continue;
     }
 
-    // found a quote is it doubled ?
-    if( current === quote ) {
-      if( Log == LogLevel.DEBUG ) console.log("closing quote ?");
-      closing=true;
-      continue;
-    }
-
-    if( last === quote && closing ) {
+    if( last === quote && checkDoubledQuote ) {
       if( Log == LogLevel.DEBUG ) console.log("after closing quote");
       quote='';
       endCol = true;
@@ -332,7 +351,7 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
   // last line. is is complete?
   if( processTrailing ) {
     if ( Log == LogLevel.DEBUG2 ) console.log("processing trail");
-    if ( quote==='' || closing || endCol ){
+    if ( quote==='' || checkDoubledQuote || endCol ){
       if ( Log == LogLevel.DEBUG2 ) console.log("end of col", cleanValue(value));
       // end of col
       values.push(cleanValue(value));
