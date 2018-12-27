@@ -23,6 +23,9 @@ module.exports = {
       parseCSVReader(reader, columnFilter, rowProcessor, endCallback);
     },
     parseCSVLine : function(line, separator, columns){
+      if(!separator)
+        separator = detect(line).delimiter;
+
       var result;
       parseCSVChunk(line, separator,
         function(data){
@@ -72,9 +75,15 @@ function parseCSVReader(reader, columnFilter, rowProcessor, endCallback) {
         //console.log(">+>> firstLine");
         columns = data;
         firstLine = false;
+        // fix columns name.
+        for(var i=0;i<columns.length;i++){
+          columns[i]=columns[i].toLowerCase();
+          columns[i]=columns[i].replace(/[ -]/g,"_");
+        }
+        // check columns
         if( !columnFilter( columns ) ){
            // skip file.
-           if( Log == LogLevel.DEBUG ) console.log("header rejected, skiping stream");
+           // console.log("header rejected, skiping stream", columns);
            csvStream.end();
         }
         return;
@@ -266,9 +275,9 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
       // is it quoted ?
       if( current==='\"' || current==='\'' ){
         quote = current;
-        // blanks current car to skip doubled quotes check.
-        //current='_';
         checkDoubledQuote = false;
+        // blanks current car to skip reset doubled quotes check.
+        current='_';
         if( Log == LogLevel.DEBUG ) console.log("new quoted column", quote);
         continue;
       }
@@ -287,6 +296,8 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
       if( Log == LogLevel.DEBUG ) console.log("escaping doubled quotes");
       checkDoubledQuote = false;
       value=value+current;
+      // blanks current car to skip reset doubled quotes check.
+      current='_';
       continue;
     }
 
@@ -333,9 +344,10 @@ function parseCSVChunk(chunk, separator, rowProcessor, processTrailing){
 
     if( endCol ){
       // invalid state. col should be terminated.
-      console.log("column should end now", ">"+chunk.substring(i-10>0?i-10:0, i)+"*"+chunk.substring(i,i+10)+"<");
+      console.log("column should end now", ">"+chunk.substring(i-20>0?i-20:0, i)+"*"+chunk.substring(i,i+20)+"<");
       console.log("char are",last.charCodeAt(0), current?current.charCodeAt(0):'-');
       console.log("index is",i);
+      console.log("expected separator is",separator);
       throw new Error("invalid CSV. column should end now");
     }
     value=value+current;
@@ -381,18 +393,38 @@ function splitCSV () {
   var soFar = null;
   var firstLine = true;
   var delimiter = '';
+  var abort = false; // set to true to abort parsing.
 
   function emit(stream, piece) {
       stream.queue(piece)
   }
 
   function next (stream, buffer, lastChunk) {
+    if(abort) {
+      stream.queue(null);
+      return;
+    }
     // soFar + buffer.
     buffer = (soFar != null ? soFar : '') + buffer;
     if( firstLine ){
       // resolve delimiter
       theFirstLine = buffer.split('\n',1)[0];
-      delimiter = detect(theFirstLine).delimiter;
+      if(theFirstLine[0]==='{'){
+        console.log("this appears to be json file");
+        abort = true;
+        return
+      }
+      var detectFirstLine = detect(theFirstLine);
+      if( detectFirstLine ) {
+        delimiter = detectFirstLine.delimiter;
+      }
+      if( !detectFirstLine || !delimiter || delimiter.length==0) {
+        console.log("can't detect first line delimiter. skiping file", ">"+theFirstLine+"<", ">"+delimiter+"<\n");
+        //return emit(stream, new Error('maximum buffer reached'))
+        abort = true;
+        return
+      }
+      // console.log("delimiter :", delimiter);
       firstLine = false;
     }
     //console.log("last :",lastChunk);
@@ -404,6 +436,7 @@ function splitCSV () {
   return through(
     // write
     function (b) {
+      if(abort) return
       next(this, decoder.write(b), false);
     },
     //end

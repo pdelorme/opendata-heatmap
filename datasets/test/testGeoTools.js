@@ -18,19 +18,19 @@ describe('geoTools', function() {
     geoTools.parseCSVFile(
       "test/testGeoTools.csv",
       function(geoObject){
-        console.log(geoObject);
+        // console.log(geoObject);
         switch (rowIndex++) {
           case 0 :
-            assert.equal(geoObject.latitude, "c");
-            assert.equal(geoObject.longitude,"d");
+            assert.equal(geoObject.latitude, "1");
+            assert.equal(geoObject.longitude,"1");
             break;
           case 1 :
-            assert.equal(geoObject.latitude, "g");
-            assert.equal(geoObject.longitude,"h");
+            assert.equal(geoObject.latitude, "2");
+            assert.equal(geoObject.longitude,"2");
             break;
           case 2 :
-            assert.equal(geoObject.latitude, "k");
-            assert.equal(geoObject.longitude,"l");
+            assert.equal(geoObject.latitude, "3");
+            assert.equal(geoObject.longitude,"3");
             break;
           default :
             throw new Error("too many rows :"+row);

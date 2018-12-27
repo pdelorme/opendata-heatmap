@@ -75,7 +75,7 @@ describe('csvTools', function() {
 
   it('parsing simple csv doubled double quotes', function() {
     result = csvTools.parseCSVLine("12,45.7,\"ti\"\"ti\",\"\"\"hello\"\"\",22",',');
-    console.log(">>",result);
+    // console.log(">>",result);
     assert.equal(Object.keys(result).length, 5);
     assert.equal(result[0],12);
     assert.equal(result[1],45.7);
@@ -106,7 +106,13 @@ describe('csvTools', function() {
     assert.equal(result.text2,"titi");
     assert.equal(result.c4,22);
   });
-
+  it('parsing csv with unknown delimiter', function() {
+    result = csvTools.parseCSVLine("\"One\";\"Two\";\"Three\"");
+    assert.equal(Object.keys(result).length, 3);
+    assert.equal(result[0],"One");
+    assert.equal(result[1],"Two");
+    assert.equal(result[2],"Three");
+  })
   it('parsing csv chunk', function(done) {
     rowIndex = 0;
     result = csvTools.parseCSVChunk("12,45.7,\"toto\",\'titi',69\n  24 ,\t2 ,  \"tata\"  ,  toto  ,35\n.5,123456789,\"hello\nworld\",\"hello\tworld\",\"hello\r\nworld\"",',', function(row){
@@ -258,7 +264,7 @@ describe('csvTools', function() {
     );
   });
 
-  it('parsing csv stream2 with invalid headers', function(done) {
+  it('parsing csv stream with invalid headers', function(done) {
    itStream = new stream.Readable();
    itStream.push("val1,val2,txt1,txt2,'ext1'\n12,45.7,\"toto\",\'titi',69\n  24 ,\t2 ,  \"tata\"  ,  toto  ,35\n.5,123456789,\"hello\nworld\",\"hello\tworld\",\"hello\r\nworld\"");
    itStream.push(null);
@@ -269,6 +275,157 @@ describe('csvTools', function() {
       },
       function() {
         // end callback
+        done();
+      }
+    );
+  });
+
+  it('parsing invalid csv stream ', function(done) {
+   itStream = new stream.Readable();
+   itStream.push("Bla bla bla\n  24 ,\t2 ,  \"tata\"  ,  toto  ,35\n.5,123456789,\"hello\nworld\",\"hello\tworld\",\"hello\r\nworld\"");
+   itStream.push(null);
+   csvTools.parseCSVReader(itStream,
+      function( headers ){ return false },
+      function( row ) {
+        throw new Error("stream should be skipped");
+      },
+      function() {
+        // end callback
+        done();
+      }
+    );
+  });
+
+  it.skip('parsing csv stream with empty lines', function(done) {
+   itStream.push("\n\n\nval1,val2,txt1,txt2,'ext1'\n12,45.7,\"toto\",\'titi',69");
+   itStream.push(null);
+   rowIndex = 0;
+   csvTools.parseCSVReader(itStream,
+      function( headers ){
+        return true
+      },
+      function( row ) {
+        // row Processor
+        switch (rowIndex++) {
+          case 0 :
+            assert.equal(row.val1,12);
+            assert.equal(row.val2,45.7);
+            assert.equal(row.txt1,"toto");
+            assert.equal(row.txt2,"titi");
+            assert.equal(row.ext1,69);
+            break;
+          default :
+            throw new Error("too many rows :"+row);
+        }
+      },
+      function() {
+        // end callback
+        done();
+      }
+    );
+  });
+
+  it('parsing csv stream with semi-colon delimiter', function(done) {
+   itStream = new stream.Readable();
+   itStream.push("\"val1\";\"val2\";\"txt1\";\"txt2\";\"ext1\"\n12;45.7;\"toto\";\'titi';69");
+   itStream.push(null);
+   rowIndex = 0;
+   csvTools.parseCSVReader(itStream,
+      function( headers ){ return true },
+      function( row ) {
+        // console.log(">>",row);
+        switch (rowIndex++) {
+          case 0 :
+            assert.equal(row.val1,12);
+            assert.equal(row.val2,45.7);
+            assert.equal(row.txt1,"toto");
+            assert.equal(row.txt2,"titi");
+            assert.equal(row.ext1,69);
+            break;
+          default :
+             throw new Error("too many rows :"+row);
+        }
+      },
+      function() {
+        // end callback
+        assert.equal(rowIndex, 1, "unexpected number of rows");
+        done();
+      }
+    );
+  });
+
+  it('parsing funcky csv file', function(done) {
+   var reader = fs.createReadStream("paca/datasets/CSV/avignon-journees-europeennes-du-patrimoine-2018");
+   var expectedColumns = 42;
+   var expectedRows = 50;
+   rowIndex = 0;
+   csvTools.parseCSVReader(reader,
+      function( headers ){ return true },
+      function( row ) {
+        // console.log(">>",row.latitude,row.longitude);
+        // assert.equal(row.length, expectedColumns);
+        assert(!isNaN(row.latitude),'expecting latitude as number :'+row.latitude);
+        assert(!isNaN(row.longitude),'expecting longitude as number :'+row.longitude);
+        rowIndex++;
+      },
+      function() {
+        // end callback
+        assert.equal(rowIndex, expectedRows,"unexpected number of rows");
+        done();
+      }
+    );
+  });
+
+  it('parsing invalid csv stream (no delimiter)', function(done) {
+   itStream = new stream.Readable();
+   itStream.push("Test sans delimiter\nA voir si ca marche\nHello,world\ngood,bye,big,world");
+   itStream.push(null);
+   rowIndex = 0;
+   csvTools.parseCSVReader(itStream,
+      function( headers ){ return true },
+      function( row ) {
+        // console.log(">>",row);
+        switch (rowIndex++) {
+          default :
+             throw new Error("too many rows :"+row);
+        }
+      },
+      function() {
+        // end callback
+        assert.equal(rowIndex, 0, "unexpected number of rows");
+        done();
+      }
+    );
+  });
+
+
+  it('parsing invalid csv file (no delimiter)', function(done) {
+   var reader = fs.createReadStream("paca/datasets/CSV/emissions-de-gaz-a-effet-de-serre-prg100-par-commune-de-2007-a-2015-indicateur");
+   csvTools.parseCSVReader(reader,
+      function( headers ){
+        console.log(headers);
+        return true },
+      function( row ) {
+        throw new Error("too many rows :"+row);
+      },
+      function() {
+        // end callback
+//        assert.equal(rowIndex, expectedRows,"unexpected number of rows");
+        done();
+      }
+    );
+  });
+
+  it('parsing json-like file ', function(done) {
+   itStream = new stream.Readable();
+   itStream.push("{json:toto}");
+   itStream.push(null);
+   csvTools.parseCSVReader(itStream,
+      function( headers ){ return true },
+      function( row ) {
+        throw new Error("unexpected row :"+row);
+      },
+      function() {
         done();
       }
     );

@@ -72,9 +72,9 @@ function loadXMLQueries(xmlFile, callback){
 				console.log(err);
 				return;
 			}
-			for (var query in result.queries) { 
+			for (var query in result.queries) {
 				console.log("registering query",query);
-				sqlQueries[query] = result.queries[query]; 
+				sqlQueries[query] = result.queries[query];
 			}
 			// console.log("xmlFile loaded",xmlFile);
 			// console.log(sqlQueries);
@@ -110,11 +110,11 @@ function update_or_insert(updateQuery, insertQuery, object, callback){
 			if(result.affectedRows>0){
 				console.log("object updated :", object);
 				connection.release();
-				if(callback) 
+				if(callback)
 					callback();
 				return;
 			}
-				
+
 			// And done with the connection.
 			connection.query(insertQuery, object, function(err, result) {
 				if (err) throw err;
@@ -125,7 +125,7 @@ function update_or_insert(updateQuery, insertQuery, object, callback){
 					callback();
 			});
 		});
-	});		
+	});
 }
 
 
@@ -136,7 +136,7 @@ function update_or_insert(updateQuery, insertQuery, object, callback){
  * @returns
  */
 function prepare(query, values) {
-	if (!values) 
+	if (!values)
 		return query;
 	return query.replace(/\:(\w+)/g, function (txt, key) {
 		if (values.hasOwnProperty(key)) {
@@ -219,14 +219,19 @@ function insert(insertKey, object, callback){
 			console.log(insertString);
 		try {
 			connection.query(insertString, function(err, result) {
-				if (err) throw err;
+				if (err) {
+					console.log("FATAL ERROR :",err, insertString);
+					if(callback)
+					callback(err);
+				}
+				// throw new Error(err);
 				//console.log("object inserted :",object);
 				connection.release();
 				if(callback)
 					callback(err, result);
 			});
 		} catch(error){
-			console.log("FATAL ERROR :",error);
+			console.log("FATAL ERROR :",error, insertString);
 			if(callback)
 				callback(error);
 		}

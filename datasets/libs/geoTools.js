@@ -2,9 +2,8 @@
  * Outil de parsing des coordonées geo.
  */
 
-const
-  csvTools = require('./csvTools');
-
+const csvTools = require('./csvTools');
+const isNumber = require('is-number');
 
 module.exports = {
     parseCSVFile : function(filename, processGeoObject, endCallback){
@@ -54,7 +53,7 @@ function parseCSVFile(filename, processGeoObject, endCallback){
     function(row){
       // console.log("processing row", row);
       geoObject = parseData(row);
-      if(geoObject){
+      if(geoObject && isNumber(geoObject.latitude) && isNumber(geoObject.longitude)){
         processGeoObject(geoObject);
       }
     },
@@ -62,17 +61,17 @@ function parseCSVFile(filename, processGeoObject, endCallback){
 }
 
 
-var okHeaders = ["wgs84", "geo_point_2d", "lat_lon", "geometry_x_y", ["latitude", "longitude"], ["lat","lon"]];
+var okHeaders = ["wgs84", "geo_point", "geo_point_2d", "lat_lon", "geometry_x_y", ["latitude", "longitude"], ["lat","lon"], ["long","lat"]];
 /**
  * returns true if given headers contains geodata fields
  * @param headers list of headers to check.
  * @return true when a least one header match.
  */
 function isGeoDataHeader(headers){
-  for(i=0;i<headers.length;i++){
+  for(var i=0;i<headers.length;i++){
     headers[i]=headers[i].toLowerCase();
   }
-  for(okHeader of okHeaders){
+  for(var okHeader of okHeaders){
     // console.log(okHeader);
     if(okHeader instanceof Array){
       // console.log(headers);
@@ -108,6 +107,11 @@ function parseData(row){
     }
   }
 
+  // geo_point
+  if(row.geo_point){
+    return gpsToGeoObject(row.geo_point);
+  }
+
   // geo_point_2d
   if(row.geo_point_2d){
     return gpsToGeoObject(row.geo_point_2d);
@@ -132,20 +136,20 @@ function parseData(row){
       return dataObject;
   }
 
-  // Latitude, Longitude
-  if(row.Latitude && row.Longitude){
-      var dataObject = {
-        latitude  : row.Latitude,
-        longitude : row.Longitude
-      };
-      return dataObject;
-  }
-
   // lat, lon
   if(row.lat && row.lon){
       var dataObject = {
         latitude  : row.lat,
         longitude : row.lon
+      };
+      return dataObject;
+  }
+
+  // lat, long
+  if(row.lat && row.long){
+      var dataObject = {
+        latitude  : row.lat,
+        longitude : row.long
       };
       return dataObject;
   }

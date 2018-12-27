@@ -6,6 +6,7 @@ var fs      = require("fs");
 var request = require('request');
 var Batch   = require("batch");
 
+var checkLocalDir = true; // when true, we first check files are present locally to avoid unnecessary download.
 var datasud_url = "http://trouver.datasud.fr/api/3/action/";
 
 module.exports = {
@@ -55,7 +56,7 @@ function getDatasetInfo(datasetId, callback){
   if(datasetId==="base-sirene-des-entreprises-et-de-leurs-etablissements-en-provence-alpes-cote-dazur"){
     callback("SKIPING dataset");
   }
-  // https://trouver.datasud.fr/api/3/action/package_show?id=episodes-de-pollution-pour-les-departements-de-la-region-sud-paca 
+  // https://trouver.datasud.fr/api/3/action/package_show?id=episodes-de-pollution-pour-les-departements-de-la-region-sud-paca
   var download_url = datasud_url+"package_show?id="+datasetId;
   var package_dir = "paca/datasets/packages";
   if(!fs.existsSync(package_dir)){
@@ -63,8 +64,12 @@ function getDatasetInfo(datasetId, callback){
   }
   var dataset_file = package_dir+"/"+datasetId+".packageInfo";
   var thisDatasetId = datasetId;
-  // console.log("downloading DataSetInfo :",datasetId);
-  request(download_url, 
+  //console.log("downloading DataSetInfo :",datasetId);
+  if(checkLocalDir && fs.existsSync(dataset_file)) {
+    // console.log("getting dataset.packageInfo from local folder:", datasetId);
+    return readDatasetInfo(dataset_file, thisDatasetId, callback);
+  }
+  request(download_url,
       function(error, response, body){
           if(error){
               console.log("DOWNLOAD ERROR",error);
@@ -72,32 +77,71 @@ function getDatasetInfo(datasetId, callback){
                 callback(error);
               return;
           }
-          // console.log(datasetId, "downloaded");
-          var packageInfo = JSON.parse(body).result;
-          var hasResource = false;
-          var avalaibleFormats="";
-          for(var i=0; i < packageInfo.resources.length; i++){
-            var resource = packageInfo.resources[i];
-            var datasetInfo = {
-              title : packageInfo.title,
-              dataset_ref : thisDatasetId,
-              revision :  packageInfo.revision_id,
-              user_url :  resource.url,
-              data_url : resource.url,
-              format   : resource.format
-            };
-            if(resource.format=='CSV'){
-              hasResource = true;
-              return callback(null, datasetInfo);
-            }
-            avalaibleFormats+=(avalaibleFormats===""?"":",")+resource.format;
-          }
-          if(!hasResource)
-            return callback("Formats : "+ avalaibleFormats);
+          // // console.log(datasetId, "downloaded");
+          // var packageInfo = JSON.parse(body).result;
+          // var hasResource = false;
+          // var avalaibleFormats="";
+          // for(var i=0; i < packageInfo.resources.length; i++){
+          //   var resource = packageInfo.resources[i];
+          //   var datasetInfo = {
+          //     title : packageInfo.title,
+          //     dataset_ref : thisDatasetId,
+          //     revision :  packageInfo.revision_id,
+          //     user_url :  resource.url,
+          //     data_url : resource.url,
+          //     format   : resource.format
+          //   };
+          //   if(resource.format=='CSV'){
+          //     hasResource = true;
+          //     return callback(null, datasetInfo);
+          //   }
+          //   avalaibleFormats+=(avalaibleFormats===""?"":",")+resource.format;
+          // }
+          // if(!hasResource)
+          //   return callback("Formats : "+ avalaibleFormats);
+          readDatasetInfo(dataset_file, thisDatasetId, callback);
       }
   ).pipe(fs.createWriteStream(dataset_file));
 }
 
+/**
+ * read dataset_info from file
+ */
+function readDatasetInfo(dataset_file, thisDatasetId, callback){
+  fs.readFile(dataset_file, 'utf8', function (err, body) {
+    if (err) {
+      console.log('Error: ' + err);
+      return callback(err);
+    }
+    var packageInfo = ""
+    try {
+      var packageInfo = JSON.parse(body).result;
+    } catch (e){
+      console.log(body);
+      throw e;
+    }
+    var hasResource = false;
+    var avalaibleFormats="";
+    for(var i=0; i < packageInfo.resources.length; i++){
+      var resource = packageInfo.resources[i];
+      var datasetInfo = {
+        title : packageInfo.title,
+        dataset_ref : thisDatasetId,
+        revision :  packageInfo.revision_id,
+        user_url :  resource.url,
+        data_url : resource.url,
+        format   : resource.format
+      };
+      if(resource.format=='CSV'){
+        hasResource = true;
+        return callback(null, datasetInfo);
+      }
+      avalaibleFormats+=(avalaibleFormats===""?"":",")+resource.format;
+    }
+    if(!hasResource)
+      return callback("Formats : "+ avalaibleFormats);
+  });
+}
 /**
  * donwloads a dataset from databaseInfo
  * @param datasetInfo
@@ -115,8 +159,15 @@ function downloadDataset(datasetInfo, callback){
   }
   datasetInfo.data_url = download_url;
   datasetInfo.filepath = dataset_file;
-  console.log("donwloading DataSet:",datasetId);
-  request(download_url, 
+  // don't download if already downloaded.
+  if(checkLocalDir && fs.existsSync(dataset_file)) {
+    // console.log("getting dataset from local folder:", datasetId);
+    if(callback)
+      callback(null, dataset_file);
+    return;
+  }
+  // console.log("donwloading DataSet:",datasetId);
+  request(download_url,
       function(error, response, body){
           if(error){
               console.log(">! DOWNLOAD ERROR",error);
@@ -144,7 +195,7 @@ function fetchDatasets(callback, date){
     console.log("fetching Dataset from DATE not implemented. returning full dataset");
   }
   console.log("fetching url :"+datasets_url);
-  request(datasets_url, 
+  request(datasets_url,
       function(error, response, body){
           if (error) throw err;
           //var Datasets = JSON.parse(body);
@@ -173,7 +224,7 @@ function processAllDatasets(dataset_file, concurency, datasetProcessor, callback
       return callback(err);
     }
     datasets = JSON.parse(data).result;
-    
+
     var batch = new Batch;
     batch.concurrency(concurency);
 
@@ -187,7 +238,7 @@ function processAllDatasets(dataset_file, concurency, datasetProcessor, callback
         });
       })(datasets[i]);
     }
-    
+
     // end.
     batch.end(function(err, data){
       if(err) {
@@ -250,7 +301,7 @@ function donwloadAllDatasets(datasetIds, format, callback){
   console.log("donwload all datasets : count ="+datasetIds.length);
   var batch = new Batch;
   batch.concurrency(3);
-  
+
   for(var i = 0; i<datasetIds.length; i++){
     (function(datasetId){
       batch.push(function(done){
@@ -258,7 +309,7 @@ function donwloadAllDatasets(datasetIds, format, callback){
       });
     })(datasetIds[i]);
   }
-  
+
   batch.end(function(err, data){
     if(err)
         console.log("DONWLOAD ALL ERROR",err);

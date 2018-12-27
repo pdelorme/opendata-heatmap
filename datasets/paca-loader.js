@@ -29,6 +29,7 @@ function main(){
       };
       geoTools.parseCSVFile(thisDatasetInfo.filepath,
           function(geoObject){
+            // console.log(">>",geoObject);
             odhm.insertGeodata(dataset_id, geoObject, null);
           },
           function(err){
@@ -55,28 +56,31 @@ function main(){
     // 1 get dataset info
     paca.getDatasetInfo(dataset, function( err, datasetInfo) {
       if(err) {
-        console.log("> skiping dataset",err,thisDataset, datasetInfo);
+        console.log(">> skiping dataset :",thisDataset, "Err:", err);
         return done();
       }
       var thisDatasetInfo = datasetInfo;
       // 2 - check this dataset is not already in database.
       odhm.getDataset(datasetInfo.dataset_ref, datasetInfo.revision, function(err, data){
-        if(err)
+        if(err) {
+          console.log(">> error getting dataset : ",err)
           return done();
+        }
         // console.log(thisDatasetInfo,data);
         if(data && data.length>0){
-          console.log("> dataset already processed :",thisDatasetInfo.dataset_ref);
+          console.log(">> dataset already processed :",thisDatasetInfo.dataset_ref);
           return done();
         }
         // 3 load dataset
         paca.downloadDataset(thisDatasetInfo, function(err, dataset_file){
-          if(err)
+          if(err) {
+            console.log(">> error downloading dataset :",thisDatasetInfo.dataset_ref);
             return done();
-            // 4 - process data
-            _fileProcessor(thisDatasetInfo, done);
-          });
-        }
-      );
+          }
+          // 4 - process data
+          _fileProcessor(thisDatasetInfo, done);
+        });
+      });
     });
   }
 
